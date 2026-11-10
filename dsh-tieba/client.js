@@ -45,7 +45,7 @@ window.__ModuleLoader__.load({
 .tb-post:last-child{border-bottom:none}
 .tb-meta{display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--dsw-alias-label-secondary);margin-bottom:3px;min-width:0}
 .tb-author{font-weight:500;color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.tb-lz{color:#fff;background:var(--dsw-alias-brand-primary);border-radius:3px;padding:0 3px;font-size:10px}
+.tb-lz{color:var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 15%,transparent);border-radius:3px;padding:0 3px;font-size:10px}
 .tb-content{line-height:1.65;word-break:break-word;white-space:pre-wrap}
 .tb-content a{color:var(--dsw-alias-brand-primary)}
 .tb-img{display:block;max-width:100%;max-height:180px;border-radius:6px;margin:4px 0;cursor:zoom-in;background:var(--dsw-alias-bg-layer-2)}

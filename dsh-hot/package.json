@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-hot",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Trending lists (Zhihu, Baidu, Bilibili, Douyin, Toutiao, Juejin, Hacker News, GitHub) in a compact sidebar card.",
   "type": "module",
   "exports": {
