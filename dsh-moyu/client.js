@@ -153,7 +153,7 @@ window.__ModuleLoader__.load({
         b.hubOn = () => Boolean(b.hub && b.docks.hub)
       }
       b.extras = b.extras || {}
-      b.help = () => Object.values(b.docks).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
+      b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
         .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
         .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
       return b
@@ -225,7 +225,7 @@ window.__ModuleLoader__.load({
         const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
         const onKey = (e) => {
           if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.isComposing || e.repeat) return
-          if (e.code === 'Key' + cfg.key) {
+          if (cfg.key && e.code === 'Key' + cfg.key) {
             e.preventDefault()
             if (bus.hidden) { bus.setHidden(false); store.set({ collapsed: false }) } else store.set((st) => ({ collapsed: !st.collapsed }))
           } else if (e.code === 'KeyH' && !e.__dshDockHandled) {
@@ -298,7 +298,7 @@ window.__ModuleLoader__.load({
               h('div', { className: 'yk-title', title: t }, t),
               actions ? actions(state) : null,
               h('button', { className: 'yk-ibtn', title: `隐藏所有侧栏小部件（${ykKey('H')}）\n\n${bus.help()}`, 'aria-label': '隐藏', onClick: () => bus.setHidden(true) }, YkIcons.hide()),
-              h('button', { className: 'yk-ibtn', title: `收起（${ykKey(cfg.key)}）`, 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
+              h('button', { className: 'yk-ibtn', title: cfg.key ? `收起（${ykKey(cfg.key)}）` : '收起', 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
             h('div', { className: 'yk-body', style: { height: state.height } }, h(Body)),
             h(YkLightbox))
         }

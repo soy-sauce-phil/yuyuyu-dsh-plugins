@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-rss",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "RSS / Atom reader in the sidebar: subscriptions, unread counts, OPML import/export, in-card reading.",
   "type": "module",
   "exports": {

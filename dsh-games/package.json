@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-games",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Offline mini games in the sidebar: 2048, Minesweeper, Sudoku, with autosave.",
   "type": "module",
   "exports": {

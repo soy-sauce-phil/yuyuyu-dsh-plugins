@@ -153,7 +153,7 @@ window.__ModuleLoader__.load({
         b.hubOn = () => Boolean(b.hub && b.docks.hub)
       }
       b.extras = b.extras || {}
-      b.help = () => Object.values(b.docks).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
+      b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
         .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
         .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
       return b
@@ -225,7 +225,7 @@ window.__ModuleLoader__.load({
         const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
         const onKey = (e) => {
           if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.isComposing || e.repeat) return
-          if (e.code === 'Key' + cfg.key) {
+          if (cfg.key && e.code === 'Key' + cfg.key) {
             e.preventDefault()
             if (bus.hidden) { bus.setHidden(false); store.set({ collapsed: false }) } else store.set((st) => ({ collapsed: !st.collapsed }))
           } else if (e.code === 'KeyH' && !e.__dshDockHandled) {
@@ -298,7 +298,7 @@ window.__ModuleLoader__.load({
               h('div', { className: 'yk-title', title: t }, t),
               actions ? actions(state) : null,
               h('button', { className: 'yk-ibtn', title: `隐藏所有侧栏小部件（${ykKey('H')}）\n\n${bus.help()}`, 'aria-label': '隐藏', onClick: () => bus.setHidden(true) }, YkIcons.hide()),
-              h('button', { className: 'yk-ibtn', title: `收起（${ykKey(cfg.key)}）`, 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
+              h('button', { className: 'yk-ibtn', title: cfg.key ? `收起（${ykKey(cfg.key)}）` : '收起', 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
             h('div', { className: 'yk-body', style: { height: state.height } }, h(Body)),
             h(YkLightbox))
         }
@@ -335,7 +335,7 @@ window.__ModuleLoader__.load({
       inject: ['slots'],
       apply(ctx) {
         const dock = createDock(ctx, {
-          id: 'hub', key: 'A', label: '总入口', order: -200, icon: Icon, storageKey: 'dsh-dockhub:v1', height: 220,
+          id: 'hub', key: null, label: '总入口', order: -200, icon: Icon, storageKey: 'dsh-dockhub:v1', height: 220,
           defaults: {},
         })
         const { bus } = dock
@@ -360,13 +360,13 @@ window.__ModuleLoader__.load({
                 const badge = (() => { try { return d.badge() } catch { return null } })()
                 const open = bus.open === d.id
                 return h('button', {
-                  key: d.id, className: 'yk-hub-tile' + (open ? ' yk-on' : ''), title: `${d.label}（${ykKey(d.key)}）${badge?.tip ? '\n' + badge.tip : ''}`,
+                  key: d.id, className: 'yk-hub-tile' + (open ? ' yk-on' : ''), title: d.key ? `${d.label}（${ykKey(d.key)}）${badge?.tip ? '\n' + badge.tip : ''}` : d.label,
                   onClick: () => { d.expand(); bus.setOpen(d.id) },
                 },
                   badge?.text ? h('span', { className: 'yk-hub-badge' }, badge.text) : null,
                   h('span', { className: 'yk-hub-ico' }, d.icon()),
                   h('span', { className: 'yk-hub-name' }, d.label),
-                  h('span', { className: 'yk-hub-key' }, ykKey(d.key)))
+                  d.key ? h('span', { className: 'yk-hub-key' }, ykKey(d.key)) : null)
               }))
               : h('div', { className: 'yk-muted yk-pad' }, '还没有其他小部件。'),
             h('div', { className: 'hub-foot' },
@@ -374,7 +374,7 @@ window.__ModuleLoader__.load({
                 h('input', { type: 'checkbox', checked: Boolean(bus.hub), onChange: (e) => bus.setHub(e.target.checked) }),
                 '收进总入口'),
               h('span', { className: 'yk-muted', style: { fontSize: 11 } }, bus.hub ? '其他小图标已隐藏，快捷键仍然可用' : '每个小部件显示自己的小图标')),
-            h('div', { className: 'hub-note' }, `点一下打开对应的小部件，再点右上角 ⌄ 或按 ${ykKey('A')} 收起。按 ${ykKey('H')} 可以一键隐藏侧栏全部小部件。`))
+            h('div', { className: 'hub-note' }, `点一下打开对应的小部件，再点右上角 ⌄ 收起。各小部件的快捷键照旧可用，按 ${ykKey('H')} 可以一键隐藏侧栏全部小部件。`))
         }
 
         dock.mount({
