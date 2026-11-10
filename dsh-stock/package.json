@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-stock",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Watch stocks, indices and funds (A-share, HK, US) in the sidebar, with holdings P&L and a live badge on the collapsed icon.",
   "type": "module",
   "exports": {

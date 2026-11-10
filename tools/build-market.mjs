@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const REPO = 'https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins'
 const PLUGINS = [
+  { dir: 'dsh-dockhub', category: 'tools', keywords: ['总入口', 'launcher', 'hub', '侧栏', 'sidebar'] },
   { dir: 'dsh-tieba', category: 'community', keywords: ['贴吧', 'tieba', 'baidu', 'sidebar'] },
   { dir: 'dsh-novel-reader', category: 'reading', keywords: ['小说', 'novel', 'legado', '阅读', 'sidebar'] },
   { dir: 'dsh-rss', category: 'reading', keywords: ['RSS', 'Atom', '订阅', '阅读', 'sidebar'] },

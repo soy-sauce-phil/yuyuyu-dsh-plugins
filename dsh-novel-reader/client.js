@@ -169,7 +169,21 @@ window.__ModuleLoader__.load({
         const useOpenDock = () => useBus((b) => b.open)
         const useDocksHidden = () => useBus((b) => b.hidden)
         ctx.effect(() => {
-          bus.docks[DOCK_ID] = { key: DOCK_KEY, label: DOCK_LABEL }
+          bus.docks[DOCK_ID] = {
+
+            id: DOCK_ID, key: DOCK_KEY, label: DOCK_LABEL, order: -85, icon: () => Icons.book(),
+
+            expand: () => store.set({ collapsed: false }),
+
+            collapse: () => store.set({ collapsed: true }),
+
+            isOpen: () => !store.get().collapsed,
+
+            badge: () => null,
+
+          }
+
+          bus.emit && bus.emit()
           if (store.get().hidden) store.set({ hidden: false }) // per-widget hide replaced by the shared one
           const isOpen = () => !store.get().collapsed && !bus.hidden
           const sync = () => { if (isOpen()) bus.setOpen(DOCK_ID); else if (bus.open === DOCK_ID) bus.setOpen(null) }
@@ -745,6 +759,8 @@ window.__ModuleLoader__.load({
           const state = useStore()
           const openDock = useOpenDock()
           const docksHidden = useDocksHidden()
+
+          const hubMode = useBus((b) => Boolean(b.hub && b.docks.hub))
           const onResize = useResize()
           useEffect(() => { ensureSources().catch(() => {}) }, [])
           if (props.wide === false || docksHidden) return null
@@ -768,6 +784,8 @@ window.__ModuleLoader__.load({
           const showFont = !state.collapsed && view === 'reader'
           if (state.collapsed) {
             if (openDock && openDock !== DOCK_ID) return null
+
+            if (hubMode) return null
             const tip = (book ? book.name : t('title')) + '\n\n快捷键：\n' + bus.help()
             return h('button', { className: 'nr-mini', title: tip, 'aria-label': t('expand'), onClick: () => store.set({ collapsed: false }) },
               h('style', null, CSS), Icons.book(), book && h('span', { className: 'nr-mini-dot' }))

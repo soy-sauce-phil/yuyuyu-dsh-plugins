@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-novel-reader",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Read online novels from Legado-style book sources in the sidebar below the workspace list.",
   "type": "module",
   "exports": {

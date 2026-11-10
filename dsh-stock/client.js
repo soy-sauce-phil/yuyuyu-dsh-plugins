@@ -52,6 +52,15 @@ window.__ModuleLoader__.load({
     .yk-mini.yk-wide{padding:0 7px 0 5px}
     .yk-mini:hover{color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2)}
     .yk-up{color:#e5534b}.yk-down{color:#3fa66b}
+    .yk-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:5px;padding:6px}
+    .yk-hub-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px 5px;border:.5px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);cursor:pointer;font:inherit;font-size:11px;min-width:0;position:relative}
+    .yk-hub-tile:hover{border-color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2)}
+    .yk-hub-tile.yk-on{border-color:var(--dsw-alias-brand-primary)}
+    .yk-hub-tile .yk-hub-ico{display:inline-flex;color:var(--dsw-alias-label-secondary)}
+    .yk-hub-tile:hover .yk-hub-ico{color:var(--dsw-alias-brand-primary)}
+    .yk-hub-tile .yk-hub-name{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .yk-hub-badge{position:absolute;top:1px;right:2px;font-size:10px;line-height:1.2;color:var(--dsw-alias-brand-primary);font-variant-numeric:tabular-nums}
+    .yk-hub-key{font-size:9px;color:var(--dsw-alias-label-secondary);opacity:.75}
     .yk-lb{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
     .yk-lb img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:4px;cursor:default;background:#222}
     .yk-lb-btn{position:absolute;border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:36px;height:36px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;padding:0}
@@ -131,9 +140,20 @@ window.__ModuleLoader__.load({
         b.emit = () => { for (const fn of [...b.listeners]) fn() }
         b.setOpen = (id) => { if (b.open !== id) { b.open = id; b.emit() } }
         b.setHidden = (v) => { if (b.hidden === v) return; b.hidden = v; try { localStorage.setItem('dsh-sidebar-docks:hidden', v ? '1' : '0') } catch {}; b.emit() }
+        // hub mode: every widget hides its own icon and keeps only the 总入口 one.
+        // It only takes effect while a dock with id 'hub' is registered, so uninstalling the hub is safe.
+        b.hub = true
+        try { if (localStorage.getItem('dsh-sidebar-docks:hub') === '0') b.hub = false } catch {}
+        b.setHub = (v) => {
+          if (b.hub === v) return
+          b.hub = v
+          try { localStorage.setItem('dsh-sidebar-docks:hub', v ? '1' : '0') } catch {}
+          b.emit()
+        }
+        b.hubOn = () => Boolean(b.hub && b.docks.hub)
       }
       b.extras = b.extras || {}
-      b.help = () => Object.values(b.docks).map((d) => `${ykKey(d.key)} ${d.label}`)
+      b.help = () => Object.values(b.docks).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
         .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
         .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
       return b
@@ -190,8 +210,16 @@ window.__ModuleLoader__.load({
       const useBus = (pick) => React.useSyncExternalStore((fn) => { bus.listeners.add(fn); return () => bus.listeners.delete(fn) }, () => pick(bus))
       let extraKey = null
 
+      let miniFn = null
       ctx.effect(() => {
-        bus.docks[cfg.id] = { key: cfg.key, label: cfg.label }
+        bus.docks[cfg.id] = {
+          id: cfg.id, key: cfg.key, label: cfg.label, order: cfg.order, icon: cfg.icon,
+          expand: () => store.set({ collapsed: false }),
+          collapse: () => store.set({ collapsed: true }),
+          isOpen: () => !store.get().collapsed,
+          badge: () => (miniFn ? miniFn(store.get()) : null),
+        }
+        bus.emit()
         const isOpen = () => !store.get().collapsed && !bus.hidden
         const sync = () => { if (isOpen()) bus.setOpen(cfg.id); else if (bus.open === cfg.id) bus.setOpen(null) }
         const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
@@ -215,6 +243,7 @@ window.__ModuleLoader__.load({
         return () => {
           bus.listeners.delete(onBus); unsubscribe(); window.removeEventListener('keydown', onKey, true)
           delete bus.docks[cfg.id]
+          bus.emit()
           if (bus.open === cfg.id) bus.setOpen(null)
           store.flush()
         }
@@ -243,14 +272,17 @@ window.__ModuleLoader__.load({
 
       function mount({ Body, title, actions, mini, onKey }) {
         extraKey = onKey || null
+        miniFn = mini || null
         function Dock(props) {
           const state = useStore()
           const open = useBus((b) => b.open)
           const hidden = useBus((b) => b.hidden)
+          const hubOn = useBus((b) => b.hubOn())
           if (props.wide === false || hidden) return null
           const t = (title && title(state)) || cfg.label
           if (state.collapsed) {
             if (open && open !== cfg.id) return null
+            if (cfg.id !== 'hub' && hubOn) return null
             const badge = mini && mini(state)
             return h('button', {
               className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + cfg.label,

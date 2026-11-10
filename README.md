@@ -5,6 +5,7 @@ DeepSeek Harness（DSH）的个人插件合集，同时也是一个 DSH 插件�
 | 插件 | 说明 |
 |---|---|
 | [dsh-novel-reader](dsh-novel-reader/) | 侧栏小说：兼容 Legado 书源，书源 JS 在沙箱中运行，也可导入本地 TXT |
+| [dsh-dockhub](dsh-dockhub/) | 总入口：把侧栏所有小部件收进一个小图标，点开是九宫格 |
 | [dsh-tieba](dsh-tieba/) | 侧栏贴吧：只读浏览，支持推荐流、看帖、楼中楼，可选登录 |
 | [dsh-rss](dsh-rss/) | RSS 阅读器：自动发现订阅、未读计数、卡片内阅读、OPML 导入导出 |
 | [dsh-hot](dsh-hot/) | 热榜聚合：知乎、百度、B 站、抖音、头条、掘金、HN、GitHub |
@@ -15,10 +16,13 @@ DeepSeek Harness（DSH）的个人插件合集，同时也是一个 DSH 插件�
 
 所有插件都显示在 DSH 左侧栏工作区列表的下方，可以收起成一个小图标。同一时间只能展开其中一个，展开一个时，其他插件的小图标会隐藏。
 
+装了[总入口](dsh-dockhub/)之后，默认只显示总入口这一个小图标，其他小部件收进它的九宫格里。想恢复成一排小图标，在总入口里取消勾选「收进总入口」即可。
+
 ## 快捷键（macOS）
 
 | 快捷键 | 作用 |
 |---|---|
+| `⌥⇧A` | 展开 / 收起总入口 |
 | `⌥⇧N` | 展开 / 收起小说 |
 | `⌥⇧T` | 展开 / 收起贴吧 |
 | `⌥⇧S` | 展开 / 收起 RSS |
@@ -51,6 +55,7 @@ DeepSeek Harness（DSH）的个人插件合集，同时也是一个 DSH 插件�
 在 DSH 插件管理中安装下面的地址。也可以直接让 DSH 的 Agent 帮你「安装这个插件」。
 
 ```
+git+https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins.git#main&path:/dsh-dockhub
 git+https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins.git#main&path:/dsh-tieba
 git+https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins.git#main&path:/dsh-novel-reader
 git+https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins.git#main&path:/dsh-rss
@@ -86,7 +91,7 @@ cd yuyuyu-dsh-plugins/dsh-novel-reader && npm install   # 小说插件有依赖
 
 ## 共享代码
 
-新的六个插件共用 `tools/kit/` 里的代码：
+新的六个插件和总入口共用 `tools/kit/` 里的代码：
 - `tools/kit/dock.js`：侧栏卡片、收起小图标、快捷键、互斥展开等。
 - `tools/kit/net.js`：后台抓取网页用的请求工具。
 
