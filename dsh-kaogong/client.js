@@ -432,10 +432,24 @@ window.__ModuleLoader__.load({
 .kg-bar i{display:block;height:100%;background:var(--dsw-alias-brand-primary)}
 .kg-stat{display:flex;justify-content:space-around;padding:8px;text-align:center;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .kg-stat b{display:block;font-size:16px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.kg-mat{margin:6px 8px 0;padding:6px 8px;border-radius:8px;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.kg-mat-head{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dsw-alias-label-secondary);margin-bottom:2px}
+.kg-mat.kg-fold .kg-mat-body{max-height:5.1em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 60%,transparent)}
+.kg-img{display:block;max-width:100%;height:auto;margin:4px 0;border-radius:4px;background:#fff;cursor:zoom-in}
+.kg-fx{display:inline-block;height:1.25em;width:auto;vertical-align:-0.3em;background:#fff;border-radius:2px;padding:0 1px;margin:0 1px}
+.kg-ph{display:inline-block;min-width:3em;min-height:1em;border-radius:3px;background:var(--dsw-alias-bg-layer-2);vertical-align:middle}
+.kg-ph.kg-big{display:block;width:100%;height:120px;margin:4px 0}
+.kg-src{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px 0}
+.kg-papers{display:flex;flex-direction:column;gap:2px;padding:2px 8px 8px}
+.kg-paper{display:flex;align-items:center;gap:6px;border:none;background:transparent;color:inherit;font:inherit;font-size:12px;text-align:left;padding:4px 6px;border-radius:6px;cursor:pointer}
+.kg-paper:hover{background:var(--dsw-alias-bg-layer-2)}
+.kg-paper .kg-bar{flex:none;width:52px;margin:0}
+.kg-year{display:flex;gap:4px;flex-wrap:wrap;padding:4px 8px 0}
 `
     const Icon = () => YkIcons.svg(['M4 5h7a3 3 0 0 1 1 1v13a2 2 0 0 0-2-2H4z', 'M20 5h-7a3 3 0 0 0-1 1v13a2 2 0 0 1 2-2h6z'])
     const LETTERS = 'ABCDEFGH'
-    const CATS = ['常识判断', '言语理解', '数量关系', '判断推理', '资料分析']
+    const CATS = ['政治理论', '常识判断', '言语理解', '数量关系', '判断推理', '资料分析']
+    const SOURCES = [['all', '全部'], ['gk', '国考'], ['js', '江苏'], ['own', '内置/自建']]
     const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
     function hashId(s) { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) | 0; return (x >>> 0).toString(36) }
     const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a }
@@ -510,14 +524,86 @@ window.__ModuleLoader__.load({
       inject: ['slots'],
       apply(ctx) {
         const dock = createDock(ctx, {
-          id: 'kaogong', key: 'K', label: '考公刷题', order: -65, icon: Icon, storageKey: 'dsh-kaogong:v1', height: 360,
-          defaults: { view: 'home', banks: [], prog: {}, days: {}, goal: 20, session: null, recite: false, shuffleOpts: false, useBuiltin: true },
+          id: 'kaogong', key: 'K', label: '考公刷题', order: -65, ns: 'kaogong', icon: Icon, storageKey: 'dsh-kaogong:v1', height: 360,
+          defaults: { view: 'home', banks: [], prog: {}, days: {}, goal: 20, session: null, recite: false, shuffleOpts: false, useBuiltin: true, usePacks: true, source: 'all', matFold: false, allPapers: false },
           onReset: () => store.set({ view: 'home', session: null }),
         })
-        const { store, useStore, bus } = dock
+        const { store, useStore, bus, call } = dock
 
-        const allQuestions = (s) => [...(s.useBuiltin ? BUILTIN : []), ...s.banks.flatMap((b) => b.questions)]
-        const byId = (s) => { const m = new Map(); for (const q of allQuestions(s)) m.set(q.id, q); return m }
+        // ---- local question packs (~/.dsh-kaogong/banks/*): a light index up front, full questions on demand
+        const packs = ykAtom({ status: 'idle', list: [], folder: '', error: '' })
+        const meta = new Map() // id -> { id, cat, tag, papers, pack, src, light }
+        const papersById = new Map() // paper id -> { ...paper, pack }
+        const full = new Map() // id -> full question from a pack
+        const fullVer = ykAtom(0)
+        const pending = new Set()
+        async function loadPacks() {
+          if (packs.get().status === 'loading') return
+          packs.set((x) => ({ ...x, status: 'loading', error: '' }))
+          try {
+            const res = await call('packs', {})
+            meta.clear(); papersById.clear(); full.clear()
+            for (const pk of res.packs || []) {
+              for (const pp of pk.papers || []) papersById.set(pp.id, { ...pp, pack: pk.id })
+              for (const [id, cat, tag, paperList, mat] of pk.index || []) {
+                const ps = paperList ? paperList.split(',') : []
+                meta.set(id, { id, cat, tag, papers: ps, pack: pk.id, mat: Boolean(mat), src: ps.some((x) => x.startsWith('gk')) ? 'gk' : ps.some((x) => x.startsWith('js')) ? 'js' : 'pack', light: true })
+              }
+            }
+            packs.set({ status: 'ok', list: (res.packs || []).map((pk) => ({ id: pk.id, name: pk.name, note: pk.note, papers: pk.papers || [], count: (pk.index || []).length })), folder: res.folder || '', error: '' })
+            fullVer.set((v) => v + 1)
+          } catch (e) {
+            packs.set((x) => ({ ...x, status: 'error', error: e.message || String(e) }))
+          }
+        }
+        /** Fetch full questions for these ids (pack questions only), a batch per pack. */
+        async function ensure(ids) {
+          const want = new Map()
+          for (const id of ids) {
+            const m = meta.get(id)
+            if (!m || full.has(id) || pending.has(id)) continue
+            if (!want.has(m.pack)) want.set(m.pack, [])
+            want.get(m.pack).push(id)
+          }
+          await Promise.all([...want].map(async ([pack, list]) => {
+            list.forEach((id) => pending.add(id))
+            try {
+              const got = await call('questions', { pack, ids: list })
+              for (const q of got || []) {
+                const m = meta.get(q.id) || {}
+                full.set(q.id, { ...q, ans: normAns(q.ans, (q.opts || []).length), pack, src: m.src })
+              }
+            } catch (e) { console.warn('[kaogong] load questions failed', e) } finally { list.forEach((id) => pending.delete(id)) }
+          }))
+          fullVer.set((v) => v + 1)
+        }
+        const images = new Map() // pack|path -> data url ('' while loading)
+        const imgVer = ykAtom(0)
+        function imageUrl(pack, path) {
+          const k = pack + '|' + path
+          if (images.has(k)) return images.get(k)
+          images.set(k, '')
+          call('image', { pack, path }).then((r) => { images.set(k, r.url); imgVer.set((v) => v + 1) }, () => { images.set(k, 'error'); imgVer.set((v) => v + 1) })
+          return ''
+        }
+
+        const ownQuestions = (s) => [...(s.useBuiltin ? BUILTIN : []), ...s.banks.flatMap((b) => b.questions)]
+        const packQuestions = (s) => (s.usePacks === false ? [] : [...meta.values()])
+        /** Every question the current source filter allows (pack questions are light entries). */
+        const allQuestions = (s) => {
+          const src = s.source || 'all'
+          if (src === 'own') return ownQuestions(s)
+          const pq = packQuestions(s)
+          if (src === 'gk' || src === 'js') return pq.filter((q) => q.src === src)
+          return [...ownQuestions(s), ...pq]
+        }
+        /** id lookup across every source, regardless of the filter (wrong book / favourites span sources). */
+        const byId = (s) => {
+          const m = new Map()
+          for (const q of ownQuestions(s)) m.set(q.id, q)
+          for (const q of packQuestions(s)) m.set(q.id, full.get(q.id) || q)
+          return m
+        }
         const dayOf = (s, d = today()) => s.days[d] || { done: 0, right: 0 }
         function streak(s) {
           let n = 0
@@ -536,12 +622,18 @@ window.__ModuleLoader__.load({
           const s = store.get()
           const map = byId(s)
           let ids
+          let label = kind === 'cat' ? arg : ''
           if (kind === 'cat') {
             const pool = allQuestions(s).filter((q) => arg === '全部' || q.cat === arg)
             const fresh = pool.filter((q) => !s.prog[q.id]?.seen)
             ids = shuffle(fresh.map((q) => q.id)).concat(shuffle(pool.filter((q) => s.prog[q.id]?.seen).map((q) => q.id)))
           } else if (kind === 'wrong') ids = shuffle(wrongList(s).filter((id) => map.has(id)))
           else if (kind === 'fav') ids = favList(s).filter((id) => map.has(id))
+          else if (kind === 'paper') {
+            const paper = papersById.get(arg)
+            ids = paper ? (paper.ids || []).filter((id) => map.has(id)) : []
+            if (paper) label = paper.name
+          }
           else if (kind === 'daily') {
             const pool = allQuestions(s)
             const wrong = shuffle(wrongList(s).filter((id) => map.has(id))).slice(0, Math.ceil(s.goal / 4))
@@ -550,7 +642,9 @@ window.__ModuleLoader__.load({
             ids = shuffle([...wrong, ...fresh, ...old].slice(0, s.goal))
           }
           if (!ids || !ids.length) return false
-          store.set({ view: 'quiz', session: { kind, arg, ids: ids.slice(0, 200), i: 0, picks: {}, done: {}, right: 0, wrong: 0 } })
+          ids = ids.slice(0, 200)
+          ensure(ids.slice(0, 8))
+          store.set({ view: 'quiz', session: { kind, arg, label, ids, i: 0, picks: {}, done: {}, right: 0, wrong: 0 } })
           return true
         }
 
@@ -574,6 +668,46 @@ window.__ModuleLoader__.load({
           })
         }
 
+        /** Text with {{img:path|WxH}} {{fx:path}} {{u}}..{{/u}} {{b}} {{sub}} {{sup}} tokens; images come from the question's pack. */
+        function Rich({ text, pack }) {
+          imgVer.use()
+          const src = String(text || '')
+          if (!src.includes('{{')) return src
+          const root = { tag: null, kids: [] }
+          const stack = [root]
+          let n = 0
+          const re = /\{\{(\/?)(img|fx|u|b|sub|sup)(?::([^}]*))?\}\}/g
+          let last = 0, m
+          const push = (x) => stack[stack.length - 1].kids.push(x)
+          while ((m = re.exec(src))) {
+            if (m.index > last) push(src.slice(last, m.index))
+            last = re.lastIndex
+            const [, close, tag, arg] = m
+            if (tag === 'img' || tag === 'fx') {
+              const [path, size] = String(arg || '').split('|')
+              const url = pack ? imageUrl(pack, path) : ''
+              const [w, hh] = (size || '').split('x').map(Number)
+              if (!url || url === 'error') push(h('span', { key: 'i' + n++, className: 'kg-ph' + (tag === 'img' ? ' kg-big' : ''), title: url === 'error' ? '图片加载失败' : '图片加载中', style: tag === 'img' && w && hh ? { aspectRatio: `${w} / ${hh}`, height: 'auto', maxWidth: w } : undefined }))
+              else if (tag === 'fx') push(h('img', { key: 'i' + n++, className: 'kg-fx', src: url, alt: '' }))
+              else push(h('img', { key: 'i' + n++, className: 'kg-img', src: url, alt: '', style: w ? { width: w } : undefined, onClick: () => ykLightbox.set({ list: [url], index: 0 }) }))
+            } else if (close) {
+              if (stack.length > 1 && stack[stack.length - 1].tag === tag) { const node = stack.pop(); push(node) }
+            } else stack.push({ tag, kids: [] })
+          }
+          if (last < src.length) push(src.slice(last))
+          while (stack.length > 1) { const node = stack.pop(); push(node) }
+          const build = (node) => node.kids.map((k) => (typeof k === 'string' || React.isValidElement(k) ? k
+            : h(k.tag === 'u' ? 'u' : k.tag === 'b' ? 'b' : k.tag, { key: 't' + n++ }, ...build(k))))
+          return h(React.Fragment, null, ...build(root))
+        }
+        function Material({ text, pack }) {
+          const s = useStore()
+          return h('div', { className: 'kg-mat' + (s.matFold ? ' kg-fold' : '') },
+            h('div', { className: 'kg-mat-head' }, h('span', null, '资料'), h('span', { style: { flex: 1 } }),
+              h('button', { className: 'yk-link', onClick: () => store.set({ matFold: !s.matFold }) }, s.matFold ? '展开材料' : '收起材料')),
+            h('div', { className: 'kg-mat-body' }, h(Rich, { text, pack })))
+        }
+
         function Quiz() {
           const s = useStore()
           const ref = useRef(null)
@@ -581,9 +715,14 @@ window.__ModuleLoader__.load({
           const map = byId(s)
           const [sel, setSel] = useState([])
           const id = sess?.ids[sess.i]
-          const q = id ? map.get(id) : null
+          fullVer.use()
+          const got = id ? map.get(id) : null
+          const loading = got && got.light
+          const q = loading ? null : got
           useEffect(() => { setSel([]); if (ref.current) ref.current.scrollTop = 0 }, [id])
-          const order = React.useMemo(() => (q ? (s.shuffleOpts ? shuffle(q.opts.map((_, i) => i)) : q.opts.map((_, i) => i)) : []), [id, s.shuffleOpts])
+          useEffect(() => { if (sess) ensure(sess.ids.slice(sess.i, sess.i + 6)) }, [id])
+          // real papers' options often refer to letters or to a figure, so their options are never shuffled
+          const order = React.useMemo(() => (q ? (s.shuffleOpts && !q.pack ? shuffle(q.opts.map((_, i) => i)) : q.opts.map((_, i) => i)) : []), [id, s.shuffleOpts, Boolean(q)])
           const answered = q && (sess.done[q.id] !== undefined || s.recite)
           const multi = q && q.ans.length > 1
           const next = () => store.set((st) => ({ session: { ...st.session, i: st.session.i + 1 } }))
@@ -609,6 +748,7 @@ window.__ModuleLoader__.load({
             return () => window.removeEventListener('keydown', onKey, true)
           })
           if (!sess) return h('div', { className: 'yk-muted yk-pad' }, '没有进行中的练习。')
+          if (loading) return h('div', { className: 'yk-muted yk-pad' }, packs.get().status === 'error' ? '题目读取失败：' + packs.get().error : '正在读取题目…')
           if (!q) {
             const total = sess.right + sess.wrong
             return h('div', { className: 'yk-scroll', style: { textAlign: 'center', padding: 16 } },
@@ -627,21 +767,23 @@ window.__ModuleLoader__.load({
             h('div', { className: 'yk-scroll', ref, tabIndex: 0, style: { outline: 'none', padding: 0 } },
               h('div', { className: 'kg-meta' },
                 h('span', null, `${sess.i + 1} / ${sess.ids.length}`),
-                h('span', { className: 'kg-tag' }, q.cat), multi && h('span', { className: 'kg-tag' }, '多选'),
+                h('span', { className: 'kg-tag' }, q.cat), q.tag && h('span', { className: 'kg-tag' }, q.tag), multi && h('span', { className: 'kg-tag' }, '多选'),
+                q.papers?.length > 0 && h('span', { title: q.papers.map((x) => papersById.get(x)?.title || x).join('\n') }, papersById.get(q.papers[0])?.name || ''),
                 p.seen ? h('span', null, `做过 ${p.seen} 次 · 错 ${p.wrong || 0}`) : h('span', null, '新题'),
                 h('span', { style: { flex: 1 } }),
                 h('button', { className: 'yk-link', title: '收藏', onClick: () => store.set((st) => ({ prog: { ...st.prog, [q.id]: { ...(st.prog[q.id] || {}), fav: !p.fav } } })) }, p.fav ? '★ 已收藏' : '☆ 收藏')),
-              h('div', { className: 'kg-q' }, q.q),
+              q.material && h(Material, { text: q.material, pack: q.pack }),
+              h('div', { className: 'kg-q' }, h(Rich, { text: q.q, pack: q.pack })),
               h('div', { className: 'kg-opts' }, order.map((k, n) => {
                 const isAns = q.ans.includes(k)
                 const cls = answered ? (isAns ? ' kg-right' : picked.includes(k) ? ' kg-wrong' : '') : sel.includes(k) ? ' kg-pick' : ''
-                return h('button', { key: k, className: 'kg-opt' + cls, disabled: answered, onClick: () => choose(k) }, h('b', null, LETTERS[n]), h('span', null, q.opts[k]))
+                return h('button', { key: k, className: 'kg-opt' + cls, disabled: answered, onClick: () => choose(k) }, h('b', null, LETTERS[n]), h('span', null, h(Rich, { text: q.opts[k], pack: q.pack })))
               })),
               multi && !answered && h('div', { style: { padding: '4px 8px' } }, h('button', { className: 'yk-btn yk-primary', disabled: !sel.length, onClick: () => submit(q, sel) }, '提交')),
               answered && h('div', { className: 'kg-exp' },
                 h('div', { style: { marginBottom: 4, fontWeight: 500, color: s.recite && ok === undefined ? undefined : ok ? '#2e9e4f' : '#e5534b' } },
                   (s.recite && ok === undefined ? '' : ok ? '✓ 回答正确　' : '✗ 回答错误　') + '正确答案：' + q.ans.map((k) => LETTERS[order.indexOf(k)]).join('')),
-                q.exp || '（暂无解析）'),
+                q.exp ? h(Rich, { text: q.exp, pack: q.pack }) : '（暂无解析）'),
               p.wrongBook && answered && h('div', { className: 'yk-muted', style: { padding: '0 10px 8px' } }, '已在错题本，连续答对 2 次后自动移出。 ',
                 h('button', { className: 'yk-link', onClick: () => store.set((st) => ({ prog: { ...st.prog, [q.id]: { ...st.prog[q.id], wrongBook: false } } })) }, '现在移出'))),
             h('div', { className: 'yk-foot' },
@@ -650,9 +792,35 @@ window.__ModuleLoader__.load({
               h('button', { className: 'yk-btn' + (answered ? ' yk-primary' : ''), onClick: next }, answered ? '下一题' : '跳过')))
         }
 
+        function Papers() {
+          const s = useStore()
+          const st = packs.use()
+          fullVer.use()
+          const src = s.source || 'all'
+          const list = [...papersById.values()].filter((x) => src === 'all' || (src === 'gk' && x.region === '国考') || (src === 'js' && x.region === '江苏'))
+          if (src === 'own' || s.usePacks === false || !list.length) return null
+          const years = [...new Set(list.map((x) => x.year))].sort((a, b) => b - a)
+          const shown = s.allPapers ? list : list.filter((x) => years.slice(0, 2).includes(x.year))
+          return h(React.Fragment, null,
+            h('div', { className: 'yk-sec' }, `整套真题（${list.length} 套）`),
+            h('div', { className: 'kg-papers' },
+              shown.map((x) => {
+                const ids = x.ids || []
+                const seen = ids.filter((id) => s.prog[id]?.seen).length
+                return h('button', { key: x.id, className: 'kg-paper', title: x.title, onClick: () => start('paper', x.id) },
+                  h('span', { style: { flex: 1 } }, x.name), h('span', { className: 'yk-muted' }, `${seen}/${ids.length}`),
+                  h('div', { className: 'kg-bar' }, h('i', { style: { width: (ids.length ? (seen / ids.length) * 100 : 0) + '%' } })))
+              }),
+              years.length > 2 && h('button', { className: 'yk-link', style: { alignSelf: 'flex-start', padding: '2px 6px' }, onClick: () => store.set({ allPapers: !s.allPapers }) }, s.allPapers ? '只看最近两年' : `显示全部年份（${years[years.length - 1]}–${years[0]}）`)),
+            st.status === 'error' && h('div', { className: 'yk-muted', style: { padding: '0 8px' } }, st.error))
+        }
+
         function Home() {
           const s = useStore()
+          const st = packs.use()
+          fullVer.use()
           const all = allQuestions(s)
+          const hasPacks = s.usePacks !== false && meta.size > 0
           const d = dayOf(s)
           const wrong = wrongList(s).length
           const fav = favList(s).length
@@ -672,6 +840,9 @@ window.__ModuleLoader__.load({
               h('button', { className: 'yk-btn', onClick: () => go('wrong') }, `错题本 ${wrong}`),
               h('button', { className: 'yk-btn', onClick: () => go('fav') }, `收藏 ${fav}`)),
             msg && h('div', { className: 'yk-muted', style: { padding: '4px 8px' } }, msg),
+            hasPacks && h('div', { className: 'kg-src' }, SOURCES.map(([k, label]) => h('button', { key: k, className: 'yk-tab' + ((s.source || 'all') === k ? ' yk-on' : ''), style: { flex: '0 0 auto' }, onClick: () => { setMsg(''); store.set({ source: k }) } }, label)),
+              h('span', { className: 'yk-muted', style: { alignSelf: 'center', fontSize: 11 } }, '今日一练和分类练习只出所选来源的题')),
+            st.status === 'loading' && !meta.size && h('div', { className: 'yk-muted', style: { padding: '4px 8px' } }, '正在读取本机真题库…'),
             s.session && s.session.ids[s.session.i] && h('div', { style: { padding: '4px 8px' } }, h('button', { className: 'yk-link', onClick: () => store.set({ view: 'quiz' }) }, `继续上次练习（第 ${s.session.i + 1}/${s.session.ids.length} 题）→`)),
             h('div', { className: 'yk-sec' }, '分类练习'),
             h('div', { className: 'kg-cats' },
@@ -685,7 +856,20 @@ window.__ModuleLoader__.load({
                   h('div', { className: 'kg-bar' }, h('i', { style: { width: (list.length ? (seen.length / list.length) * 100 : 0) + '%' } })))
               }),
               h('button', { className: 'kg-cat', onClick: () => go('cat', '全部') }, h('b', null, '全部混合'), h('span', { className: 'yk-muted' }, `${all.length} 题`))),
+            h(Papers),
             !all.length && h('div', { className: 'yk-muted yk-pad' }, '题库是空的，点右上角 ⚙ 导入题库。'))
+        }
+
+        function PackInfo() {
+          const s = useStore()
+          const st = packs.use()
+          return h(React.Fragment, null,
+            st.list.map((pk) => h('label', { key: pk.id, className: 'yk-check', style: { display: 'flex', padding: '4px 8px' } },
+              h('input', { type: 'checkbox', checked: s.usePacks !== false, onChange: (e) => store.set({ usePacks: e.target.checked, source: e.target.checked ? s.source : 'all' }) }),
+              `${pk.name}（${pk.papers.length} 套卷 · ${pk.count} 题，本机）`)),
+            h('div', { className: 'yk-muted', style: { padding: '0 8px 4px', lineHeight: 1.6 } },
+              st.status === 'error' ? `读取本机题库失败：${st.error}（插件更新后需要重启 DeepSeek Harness）` : st.list.length ? '本机题库放在 ' + st.folder + '，只在这台电脑上，不会上传。' : `本机题库文件夹：${st.folder || '~/.dsh-kaogong/banks'}（目前是空的）`,
+              ' ', h('button', { className: 'yk-link', disabled: st.status === 'loading', onClick: loadPacks }, st.status === 'loading' ? '读取中…' : '重新读取')))
         }
 
         const SAMPLE = `【常识判断】\n1. 我国的首都是？\nA. 上海\nB. 北京\nC. 广州\nD. 深圳\n答案：B\n解析：北京是中华人民共和国首都。\n\n2. 下列属于可再生能源的有（多选）\nA. 风能  B. 煤炭  C. 太阳能  D. 石油\n答案：AC\n解析：风能、太阳能可再生。`
@@ -709,9 +893,11 @@ window.__ModuleLoader__.load({
               setText('')
             } catch (e) { setMsg('导入失败：' + e.message) }
           }
-          const exportWrong = () => {
-            const map = byId(s)
-            const list = wrongList(s).map((id) => map.get(id)).filter(Boolean)
+          const exportWrong = async () => {
+            await ensure(wrongList(s))
+            const map = byId(store.get())
+            const plain = (x) => String(x || '').replace(/\{\{(?:img|fx):[^}]*\}\}/g, '[图]').replace(/\{\{\/?\w+\}\}/g, '')
+            const list = wrongList(s).map((id) => map.get(id)).filter((q) => q && !q.light).map((q) => ({ ...q, q: (q.material ? '【资料】' + plain(q.material) + '\n' : '') + plain(q.q), opts: q.opts.map(plain), exp: plain(q.exp) }))
             const txt = list.map((q, i) => `${i + 1}. ${q.q}\n${q.opts.map((o, k) => `${LETTERS[k]}. ${o}`).join('\n')}\n答案：${q.ans.map((k) => LETTERS[k]).join('')}\n解析：${q.exp || '无'}\n`).join('\n')
             const a = document.createElement('a')
             a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' })); a.download = `错题本-${today()}.txt`
@@ -719,6 +905,7 @@ window.__ModuleLoader__.load({
           }
           return h('div', { className: 'yk-scroll' },
             h('div', { className: 'yk-sec' }, '题库'),
+            h(PackInfo),
             h('label', { className: 'yk-check', style: { display: 'flex', padding: '4px 8px' } }, h('input', { type: 'checkbox', checked: s.useBuiltin, onChange: (e) => store.set({ useBuiltin: e.target.checked }) }), `内置示例题库（${BUILTIN.length} 题，原创样题，仅供体验）`),
             s.banks.map((b) => h('div', { key: b.name, className: 'yk-form', style: { padding: '2px 8px' } },
               h('span', { style: { flex: 1 } }, `${b.name}（${b.questions.length} 题）`),
@@ -748,13 +935,14 @@ window.__ModuleLoader__.load({
             h('div', { className: 'yk-muted', style: { padding: '4px 8px 8px', lineHeight: 1.6 } }, '答题时可按 A-D / 1-4 选择，回车下一题（鼠标在卡片上时生效）。数据只保存在本机浏览器。'))
         }
 
+        loadPacks()
         function Body() {
           const s = useStore()
           return h(React.Fragment, null, h('style', null, CSS), s.view === 'quiz' ? h(Quiz) : s.view === 'banks' ? h(Banks) : h(Home))
         }
         dock.mount({
           Body,
-          title: (s) => (s.view === 'quiz' && s.session ? `考公 · ${s.session.kind === 'daily' ? '今日一练' : s.session.kind === 'wrong' ? '错题本' : s.session.kind === 'fav' ? '收藏' : s.session.arg}` : s.view === 'banks' ? '考公 · 题库与设置' : '考公刷题'),
+          title: (s) => (s.view === 'quiz' && s.session ? `考公 · ${s.session.kind === 'daily' ? '今日一练' : s.session.kind === 'wrong' ? '错题本' : s.session.kind === 'fav' ? '收藏' : s.session.label || s.session.arg}` : s.view === 'banks' ? '考公 · 题库与设置' : '考公刷题'),
           actions: (s) => [
             s.view !== 'home' && h('button', { key: 'b', className: 'yk-ibtn', title: '返回首页', 'aria-label': '返回', onClick: () => store.set({ view: 'home' }) }, YkIcons.back()),
             h('button', { key: 'g', className: 'yk-ibtn' + (s.view === 'banks' ? ' yk-on' : ''), title: '题库与设置', 'aria-label': '题库与设置', onClick: () => store.set({ view: s.view === 'banks' ? 'home' : 'banks' }) }, YkIcons.gear()),

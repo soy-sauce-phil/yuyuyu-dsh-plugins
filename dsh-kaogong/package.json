@@ -1,7 +1,7 @@
 {
   "name": "@soy-sauce-phil/dsh-kaogong",
-  "version": "0.1.5",
-  "description": "Civil-service exam practice in the sidebar: wrong-answer book, favorites, daily goal, custom question banks.",
+  "version": "0.2.0",
+  "description": "Civil-service exam practice in the sidebar: wrong-answer book, favorites, daily goal, custom banks and local question packs.",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -11,6 +11,7 @@
   },
   "files": [
     "index.js",
+    "net.js",
     "client.js",
     "cordis.patch.yml",
     "locale/*.json",
@@ -25,7 +26,8 @@
       "platform": "web",
       "immediately": true,
       "inject": [
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-connection"
       ]
     }
   },

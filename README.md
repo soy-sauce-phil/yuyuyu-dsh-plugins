@@ -10,7 +10,7 @@ DeepSeek Harness（DSH）的个人插件合集，同时也是一个 DSH 插件�
 | [dsh-rss](dsh-rss/) | RSS 阅读器：自动发现订阅、未读计数、卡片内阅读、OPML 导入导出 |
 | [dsh-hot](dsh-hot/) | 热榜聚合：知乎、百度、B 站、抖音、头条、掘金、HN、GitHub |
 | [dsh-stock](dsh-stock/) | 盯盘：A 股 / 港股 / 美股 / 基金，持仓盈亏，可隐藏金额 |
-| [dsh-kaogong](dsh-kaogong/) | 考公刷题：行测五大类、每日一练、错题本、导入自己的题库 |
+| [dsh-kaogong](dsh-kaogong/) | 考公刷题：行测各模块、每日一练、错题本、整套卷练习、读取本机真题库 |
 | [dsh-games](dsh-games/) | 小游戏：2048、扫雷、数独，离线、自动存档 |
 | [dsh-moyu](dsh-moyu/) | 摸鱼助手：下班倒计时、喝水 / 活动 / 护眼提醒、一键假装工作、可改名的低调模式 |
 
