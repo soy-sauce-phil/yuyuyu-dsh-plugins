@@ -18,6 +18,12 @@ const REPO = 'https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins'
 const PLUGINS = [
   { dir: 'dsh-tieba', category: 'community', keywords: ['贴吧', 'tieba', 'baidu', 'sidebar'] },
   { dir: 'dsh-novel-reader', category: 'reading', keywords: ['小说', 'novel', 'legado', '阅读', 'sidebar'] },
+  { dir: 'dsh-rss', category: 'reading', keywords: ['RSS', 'Atom', '订阅', '阅读', 'sidebar'] },
+  { dir: 'dsh-hot', category: 'reading', keywords: ['热榜', '知乎', 'B站', 'hacker news', 'sidebar'] },
+  { dir: 'dsh-stock', category: 'tools', keywords: ['股票', '基金', '行情', '盯盘', 'sidebar'] },
+  { dir: 'dsh-kaogong', category: 'study', keywords: ['考公', '行测', '刷题', '公务员', 'sidebar'] },
+  { dir: 'dsh-games', category: 'games', keywords: ['2048', '扫雷', '数独', '小游戏', 'sidebar'] },
+  { dir: 'dsh-moyu', category: 'tools', keywords: ['摸鱼', '下班倒计时', '提醒', '伪装', 'sidebar'] },
 ]
 
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim()
@@ -65,6 +71,9 @@ const index = {
     categories: {
       community: { title: { en: 'Community', zh: '社区' } },
       reading: { title: { en: 'Reading', zh: '阅读' } },
+      study: { title: { en: 'Study', zh: '学习' } },
+      tools: { title: { en: 'Tools', zh: '工具' } },
+      games: { title: { en: 'Games', zh: '游戏' } },
     },
   },
   plugins,

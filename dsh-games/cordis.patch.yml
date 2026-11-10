@@ -1,0 +1,3 @@
+- insert:
+    - id: games
+      name: '@soy-sauce-phil/dsh-games'

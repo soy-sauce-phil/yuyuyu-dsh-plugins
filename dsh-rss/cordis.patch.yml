@@ -1,0 +1,3 @@
+- insert:
+    - id: rss
+      name: '@soy-sauce-phil/dsh-rss'

@@ -1,0 +1,598 @@
+window.__ModuleLoader__.load({
+  id: '@soy-sauce-phil/dsh-moyu',
+  factory(require) {
+    const React = require('react')
+    const h = React.createElement
+    const { useState, useEffect } = React
+    // <yk-kit> generated from tools/kit/dock.js — do not edit here
+    // Shared sidebar-dock kit, inlined into each plugin's client.js between the
+    // <yk-kit> markers by `node tools/sync-kit.mjs`. Edit this file, not the copies.
+    // Expects `React` and `h` (= React.createElement) in scope.
+    const YK_CSS = `
+    [class$="_footerActions"]{flex-wrap:wrap}
+    .yk-card{box-sizing:border-box;width:100%;margin:0 2px 6px;border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);display:flex;flex-direction:column;overflow:hidden;font-size:13px;outline:none}
+    .yk-grip{height:6px;cursor:ns-resize;flex:none;display:flex;justify-content:center;align-items:center}
+    .yk-grip::after{content:"";width:28px;height:3px;border-radius:2px;background:var(--dsw-alias-border-l2);opacity:0;transition:opacity .15s}
+    .yk-card:hover .yk-grip::after{opacity:1}
+    .yk-head{display:flex;align-items:center;gap:2px;padding:0 6px 4px 8px;flex:none;min-width:0}
+    .yk-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+    .yk-ibtn{width:24px;height:24px;flex:none;border:none;background:transparent;border-radius:6px;color:var(--dsw-alias-label-secondary);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font:inherit;font-size:12px}
+    .yk-ibtn:hover{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}
+    .yk-ibtn.yk-on{color:var(--dsw-alias-brand-primary)}
+    .yk-ibtn:disabled{opacity:.4;cursor:default;background:transparent}
+    .yk-body{flex:none;display:flex;flex-direction:column;border-top:.5px solid var(--dsw-alias-border-l1);min-height:0}
+    .yk-scroll{flex:1;min-height:0;overflow-y:auto;padding:4px}
+    .yk-pad{padding:6px 8px}
+    .yk-muted{color:var(--dsw-alias-label-secondary);font-size:12px}
+    .yk-err{color:var(--dsw-alias-state-error-primary);font-size:12px;word-break:break-word;padding:6px 8px}
+    .yk-row{padding:6px 8px;border-radius:6px;cursor:pointer;min-width:0}
+    .yk-row:hover{background:var(--dsw-alias-bg-layer-2)}
+    .yk-ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .yk-form{display:flex;gap:4px;padding:6px 6px 4px;flex:none;align-items:center;flex-wrap:wrap}
+    .yk-input,.yk-textarea,.yk-select{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);border-radius:6px;font:inherit;font-size:12px;padding:3px 6px;min-width:0}
+    .yk-input{flex:1}
+    .yk-textarea{width:100%;height:70px;resize:vertical;font-family:ui-monospace,monospace;font-size:11px}
+    .yk-input:focus,.yk-textarea:focus,.yk-select:focus{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}
+    .yk-btn{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border-radius:6px;padding:2px 8px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+    .yk-btn:hover{background:var(--dsw-alias-bg-layer-2)}
+    .yk-btn:disabled{opacity:.45;cursor:default}
+    .yk-btn.yk-on{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}
+    .yk-btn.yk-primary{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:#fff}
+    .yk-sec{font-size:11px;color:var(--dsw-alias-label-secondary);padding:8px 8px 2px}
+    .yk-link{color:var(--dsw-alias-brand-primary);cursor:pointer;font-size:12px;background:none;border:none;padding:0;font-family:inherit}
+    .yk-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 6px;border-top:.5px solid var(--dsw-alias-border-l1)}
+    .yk-tabs{display:flex;gap:2px;padding:6px 6px 2px;flex:none;overflow-x:auto;scrollbar-width:none}
+    .yk-tabs::-webkit-scrollbar{display:none}
+    .yk-tab{flex:1 0 auto;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;padding:3px 6px;border-radius:6px;cursor:pointer;white-space:nowrap}
+    .yk-tab:hover{background:var(--dsw-alias-bg-layer-2)}
+    .yk-tab.yk-on{color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2);font-weight:500}
+    .yk-check{display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;user-select:none}
+    .yk-check input{margin:0;accent-color:var(--dsw-alias-brand-primary);cursor:pointer}
+    .yk-mini{margin:0 0 6px 6px;min-width:26px;height:26px;border-radius:7px;border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0;flex:none;font:inherit;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .yk-mini.yk-wide{padding:0 7px 0 5px}
+    .yk-mini:hover{color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2)}
+    .yk-up{color:#e5534b}.yk-down{color:#3fa66b}
+    .yk-lb{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+    .yk-lb img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:4px;cursor:default;background:#222}
+    .yk-lb-btn{position:absolute;border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:36px;height:36px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;padding:0}
+    .yk-lb-btn:hover{background:rgba(255,255,255,.28)}
+    .yk-lb-bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;color:#ddd;font-size:12px}
+    .yk-lb-bar button{border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:6px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}
+    `
+    const ykSvg = (d, size = 15) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, ...d.map((p, i) => h('path', { key: i, d: p })))
+    const YkIcons = {
+      svg: ykSvg,
+      back: () => ykSvg(['M15 6l-6 6 6 6']),
+      down: () => ykSvg(['M6 9l6 6 6-6']),
+      refresh: () => ykSvg(['M20 11a8 8 0 1 0-2.3 5.7', 'M20 4v7h-7'], 14),
+      external: () => ykSvg(['M14 4h6v6', 'M20 4l-9 9', 'M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'], 14),
+      gear: () => ykSvg(['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z'], 14),
+      plus: () => ykSvg(['M12 5v14', 'M5 12h14'], 14),
+      trash: () => ykSvg(['M4 7h16', 'M10 11v6', 'M14 11v6', 'M6 7l1 13h10l1-13', 'M9 7V4h6v3'], 14),
+      hide: () => ykSvg(['M3 3l18 18', 'M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 9 6 9 6a16 16 0 0 1-2.6 3.2', 'M6.6 6.6C4.3 8.1 3 12 3 12s4 6 9 6a8.6 8.6 0 0 0 4.4-1.2', 'M9.9 9.9a3 3 0 0 0 4.2 4.2'], 14),
+    }
+    const ykIsMac = /Mac|iP(hone|ad)/.test((typeof navigator !== 'undefined' && (navigator.platform || navigator.userAgent)) || '')
+    const ykKey = (k) => (ykIsMac ? '⌥⇧' + k : 'Alt+Shift+' + k)
+    const ykOpenExternal = (url) => { if (/^https?:\/\//i.test(String(url))) window.open(url, '_blank', 'noopener,noreferrer') }
+    const ykAgo = (ms) => {
+      if (!ms) return ''
+      const d = (Date.now() - ms) / 1000
+      if (d < 60) return '刚刚'
+      if (d < 3600) return Math.floor(d / 60) + ' 分钟前'
+      if (d < 86400) return Math.floor(d / 3600) + ' 小时前'
+      if (d < 86400 * 7) return Math.floor(d / 86400) + ' 天前'
+      const t = new Date(ms)
+      return `${t.getFullYear() === new Date().getFullYear() ? '' : t.getFullYear() + '-'}${t.getMonth() + 1}-${t.getDate()}`
+    }
+
+    function ykStore(key, defaults) {
+      let state
+      try { state = { ...defaults, ...JSON.parse(localStorage.getItem(key) || '{}') } } catch { state = { ...defaults } }
+      const listeners = new Set()
+      let timer = null
+      const save = () => { timer = null; try { localStorage.setItem(key, JSON.stringify(state)) } catch {} }
+      return {
+        get: () => state,
+        subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn) },
+        set(patch) {
+          const next = typeof patch === 'function' ? patch(state) : patch
+          if (!next) return
+          state = { ...state, ...next }
+          if (!timer) timer = setTimeout(save, 300)
+          for (const fn of [...listeners]) fn()
+        },
+        flush: () => { if (timer) { clearTimeout(timer); save() } },
+      }
+    }
+
+    /** A tiny external store for non-persisted shared state. */
+    function ykAtom(initial) {
+      let value = initial
+      const listeners = new Set()
+      return {
+        get: () => value,
+        set: (v) => { value = typeof v === 'function' ? v(value) : v; for (const fn of [...listeners]) fn() },
+        subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn) },
+        use: () => React.useSyncExternalStore((fn) => { listeners.add(fn); return () => listeners.delete(fn) }, () => value),
+      }
+    }
+
+    /**
+     * The shared bus on window (also used by the novel / tieba plugins):
+     * one expanded widget at a time, ⌥⇧H hides / shows all of them.
+     */
+    function ykBus() {
+      const b = window.__dshSidebarDocks2 || (window.__dshSidebarDocks2 = { open: null, hidden: false, docks: {}, listeners: new Set() })
+      if (!b.__yk) {
+        b.__yk = true
+        b.extras = b.extras || {}
+        if (b.hidden === undefined) b.hidden = false
+        try { if (localStorage.getItem('dsh-sidebar-docks:hidden') === '1') b.hidden = true } catch {}
+        b.emit = () => { for (const fn of [...b.listeners]) fn() }
+        b.setOpen = (id) => { if (b.open !== id) { b.open = id; b.emit() } }
+        b.setHidden = (v) => { if (b.hidden === v) return; b.hidden = v; try { localStorage.setItem('dsh-sidebar-docks:hidden', v ? '1' : '0') } catch {}; b.emit() }
+      }
+      b.extras = b.extras || {}
+      b.help = () => Object.values(b.docks).map((d) => `${ykKey(d.key)} ${d.label}`)
+        .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
+        .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
+      return b
+    }
+
+    const ykLightbox = ykAtom({ list: [], index: -1 })
+    function YkLightbox() {
+      const { list, index } = ykLightbox.use()
+      const open = index >= 0 && list[index]
+      React.useEffect(() => {
+        if (!open) return
+        const onKey = (e) => {
+          if (e.key === 'Escape') ykLightbox.set({ list: [], index: -1 })
+          else if (e.key === 'ArrowLeft' && index > 0) ykLightbox.set({ list, index: index - 1 })
+          else if (e.key === 'ArrowRight' && index < list.length - 1) ykLightbox.set({ list, index: index + 1 })
+          else return
+          e.preventDefault(); e.stopPropagation()
+        }
+        window.addEventListener('keydown', onKey, true)
+        return () => window.removeEventListener('keydown', onKey, true)
+      }, [open, index, list])
+      if (!open) return null
+      const close = () => ykLightbox.set({ list: [], index: -1 })
+      const stop = (e) => e.stopPropagation()
+      const node = h('div', { className: 'yk-lb', onClick: close, role: 'dialog', 'aria-label': '查看图片' },
+        h('style', null, YK_CSS),
+        h('img', { key: list[index], src: list[index], referrerPolicy: 'no-referrer', alt: '', onClick: stop }),
+        h('button', { className: 'yk-lb-btn', style: { top: 14, right: 14 }, title: '关闭 (Esc)', onClick: close }, '×'),
+        index > 0 && h('button', { className: 'yk-lb-btn', style: { left: 14, top: '50%' }, onClick: (e) => { stop(e); ykLightbox.set({ list, index: index - 1 }) } }, '‹'),
+        index < list.length - 1 && h('button', { className: 'yk-lb-btn', style: { right: 14, top: '50%' }, onClick: (e) => { stop(e); ykLightbox.set({ list, index: index + 1 }) } }, '›'),
+        h('div', { className: 'yk-lb-bar', onClick: stop },
+          list.length > 1 && h('span', null, `${index + 1} / ${list.length}`),
+          h('button', { onClick: () => ykOpenExternal(list[index]) }, '在浏览器中打开')))
+      let RD = null
+      try { RD = ykRequire('react-dom') } catch {}
+      return RD?.createPortal && typeof document !== 'undefined' ? RD.createPortal(node, document.body) : node
+    }
+    const ykShowImages = (list, index) => ykLightbox.set({ list, index })
+    let ykRequire = () => null
+
+    /**
+     * createDock(ctx, cfg) wires one widget into the sidebar.
+     *   cfg: { id, key, label, order, icon, storageKey, defaults, height, ns }
+     * Returns { store, useStore, bus, call, mount }.
+     * mount({ Body, title, actions, mini, onKey }) registers the slot:
+     *   Body(): the card content; title(state) string; actions(state) header buttons;
+     *   mini(state) optional { text, className } badge on the collapsed icon;
+     *   onKey(e) extra ⌥⇧ shortcuts while this widget is expanded (return true if handled).
+     */
+    function createDock(ctx, cfg) {
+      const store = ykStore(cfg.storageKey, { collapsed: true, height: cfg.height || 300, ...(cfg.defaults || {}) })
+      const useStore = () => React.useSyncExternalStore(store.subscribe, store.get)
+      const bus = ykBus()
+      const useBus = (pick) => React.useSyncExternalStore((fn) => { bus.listeners.add(fn); return () => bus.listeners.delete(fn) }, () => pick(bus))
+      let extraKey = null
+
+      ctx.effect(() => {
+        bus.docks[cfg.id] = { key: cfg.key, label: cfg.label }
+        const isOpen = () => !store.get().collapsed && !bus.hidden
+        const sync = () => { if (isOpen()) bus.setOpen(cfg.id); else if (bus.open === cfg.id) bus.setOpen(null) }
+        const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
+        const onKey = (e) => {
+          if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.isComposing || e.repeat) return
+          if (e.code === 'Key' + cfg.key) {
+            e.preventDefault()
+            if (bus.hidden) { bus.setHidden(false); store.set({ collapsed: false }) } else store.set((st) => ({ collapsed: !st.collapsed }))
+          } else if (e.code === 'KeyH' && !e.__dshDockHandled) {
+            e.__dshDockHandled = true
+            e.preventDefault()
+            bus.setHidden(!bus.hidden)
+          } else if (extraKey && bus.open === cfg.id && extraKey(e)) {
+            e.preventDefault()
+          }
+        }
+        bus.listeners.add(onBus)
+        const unsubscribe = store.subscribe(sync)
+        window.addEventListener('keydown', onKey, true)
+        sync()
+        return () => {
+          bus.listeners.delete(onBus); unsubscribe(); window.removeEventListener('keydown', onKey, true)
+          delete bus.docks[cfg.id]
+          if (bus.open === cfg.id) bus.setOpen(null)
+          store.flush()
+        }
+      }, cfg.id + ': sidebar dock')
+
+      async function call(op, payload, signal) {
+        const connection = ctx.get('connection')
+        if (!connection) throw new Error('Host 连接不可用')
+        const result = await connection.rpc.call('/api', `${cfg.ns}/${op}`, payload || {}, signal)
+        if (!result.ok) throw new Error(result.error?.message || '请求失败')
+        return result.value
+      }
+
+      function onResize(e) {
+        e.preventDefault()
+        const startY = e.clientY
+        const startH = store.get().height
+        const move = (ev) => {
+          const max = Math.max(180, window.innerHeight - 240)
+          store.set({ height: Math.round(Math.min(max, Math.max(140, startH + (startY - ev.clientY)))) })
+        }
+        const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+        window.addEventListener('pointermove', move)
+        window.addEventListener('pointerup', up)
+      }
+
+      function mount({ Body, title, actions, mini, onKey }) {
+        extraKey = onKey || null
+        function Dock(props) {
+          const state = useStore()
+          const open = useBus((b) => b.open)
+          const hidden = useBus((b) => b.hidden)
+          if (props.wide === false || hidden) return null
+          const t = (title && title(state)) || cfg.label
+          if (state.collapsed) {
+            if (open && open !== cfg.id) return null
+            const badge = mini && mini(state)
+            return h('button', {
+              className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + cfg.label,
+              title: `${t}${badge?.tip ? '\n' + badge.tip : ''}\n\n快捷键：\n${bus.help()}`,
+              onClick: () => store.set({ collapsed: false }),
+            }, h('style', null, YK_CSS), cfg.icon(), badge?.text ? h('span', { className: badge.className || '' }, badge.text) : null)
+          }
+          return h('div', { className: 'yk-card yk-card-' + cfg.id },
+            h('style', null, YK_CSS),
+            h('div', { className: 'yk-grip', title: '拖动调整高度', onPointerDown: onResize }),
+            h('div', { className: 'yk-head' },
+              h('span', { style: { display: 'inline-flex', color: 'var(--dsw-alias-label-secondary)', marginRight: 4 } }, cfg.icon()),
+              h('div', { className: 'yk-title', title: t }, t),
+              actions ? actions(state) : null,
+              h('button', { className: 'yk-ibtn', title: `隐藏所有侧栏小部件（${ykKey('H')}）\n\n${bus.help()}`, 'aria-label': '隐藏', onClick: () => bus.setHidden(true) }, YkIcons.hide()),
+              h('button', { className: 'yk-ibtn', title: `收起（${ykKey(cfg.key)}）`, 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
+            h('div', { className: 'yk-body', style: { height: state.height } }, h(Body)),
+            h(YkLightbox))
+        }
+        class Boundary extends React.Component {
+          constructor(p) { super(p); this.state = { error: null } }
+          static getDerivedStateFromError(error) { return { error } }
+          componentDidCatch(error) { console.error(`[${cfg.id}] render failed`, error) }
+          render() {
+            if (this.state.error) {
+              return h('div', { style: { margin: '0 2px 6px', padding: 8, border: '.5px solid var(--dsw-alias-state-error-primary)', borderRadius: 8, fontSize: 12, color: 'var(--dsw-alias-state-error-primary)', wordBreak: 'break-word', width: '100%', boxSizing: 'border-box' } },
+                `${cfg.label}插件出错：` + (this.state.error?.message || String(this.state.error)),
+                h('button', { style: { marginLeft: 6 }, onClick: () => { cfg.onReset && cfg.onReset(); this.setState({ error: null }) } }, '重试'))
+            }
+            return h(Dock, this.props)
+          }
+        }
+        ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
+          name: 'sidebar.footer.action', id: cfg.id, order: cfg.order, label: () => cfg.label,
+        }, Boundary))
+      }
+
+      return { store, useStore, bus, useBus, call, mount }
+    }
+    // </yk-kit>
+    ykRequire = require
+
+    const CSS = `
+.my-big{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.5px;text-align:center;padding:8px 0 2px}
+.my-cap{text-align:center;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.my-bar{height:6px;border-radius:3px;background:var(--dsw-alias-bg-layer-2);overflow:hidden;margin:8px 12px 4px}
+.my-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--dsw-alias-brand-primary),#3fa66b)}
+.my-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px}
+.my-tile{border:.5px solid var(--dsw-alias-border-l2);border-radius:8px;padding:6px 8px;min-width:0}
+.my-tile b{display:block;font-size:15px;font-variant-numeric:tabular-nums;font-weight:600}
+.my-tile span{font-size:11px;color:var(--dsw-alias-label-secondary)}
+.my-line{display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:12px}
+.my-line .yk-input{flex:none;width:72px}
+.my-line .my-grow{flex:1;min-width:0}
+.my-toast{position:fixed;right:18px;bottom:18px;z-index:2147483000;max-width:300px;padding:10px 12px;border-radius:10px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:13px;line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.my-toast.my-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.my-toast button{margin-left:auto}
+`
+    // Disguise: every sidebar widget (these plugins, the novel reader and Tieba) renders as source code.
+    const CARDS = '.yk-card,.tb-card,.nr-card'
+    const scoped = (sel) => CARDS.split(',').map((c) => `body.yk-disguise ${c} ${sel}`).join(',')
+    const DISGUISE_CSS = `
+body.yk-disguise :is(${CARDS}){font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;font-size:12px!important;background:var(--dsw-alias-bg-base)!important;border-color:var(--dsw-alias-border-l1)!important}
+${scoped('*')}{font-family:inherit!important;font-weight:400!important;color:var(--dsw-alias-label-secondary)!important;background-image:none!important;text-shadow:none!important;letter-spacing:0!important}
+${scoped(':is(img,video,svg,canvas,picture)')}{opacity:0!important;max-height:0!important;margin:0!important}
+${scoped(':is(button,select,input,textarea)')}{background:transparent!important;border-color:var(--dsw-alias-border-l1)!important;box-shadow:none!important}
+${scoped(':is(.yk-row,.tb-row,.nr-row,.rs-item,.st-row,.kg-opt,.yk-tab,.tb-post,p)')}{background:transparent!important}
+${scoped(':is(.yk-row,.tb-row,.nr-row,.rs-item,.tb-post)')}::before{content:"// ";color:#6a9955}
+${scoped(':is(.yk-title,.tb-title,.nr-title)')}{font-size:0!important}
+${scoped(':is(.yk-title,.tb-title,.nr-title)')}::after{content:var(--yk-fake-file,"src/utils/request.ts");font-size:12px;color:var(--dsw-alias-label-primary)}
+${scoped(':is(.yk-up,.yk-down,.st-pct,.hot-rank,.kg-right,.kg-wrong,.g2-cell,.ms-cell,.sd-cell)')}{background:transparent!important;color:#9cdcfe!important;border-color:var(--dsw-alias-border-l1)!important}
+body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini){font-family:ui-monospace,Menlo,monospace!important;color:var(--dsw-alias-label-secondary)!important}
+body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini) :is(svg,span){display:none!important}
+body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini)::after{content:"{}";font-size:11px}
+body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
+`
+    const FAKE_FILES = ['src/utils/request.ts', 'src/api/order.service.ts', 'src/hooks/usePagination.ts', 'server/middleware/auth.go', 'src/components/Table/index.tsx', 'scripts/migrate_2026_11.sql']
+
+    const Icon = () => YkIcons.svg(['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M12 7v5l3 2'])
+
+    // Festival days (lunar dates resolved ahead); actual days off follow the State Council notice.
+    const FESTIVALS = [
+      ['元旦', '01-01'], ['劳动节', '05-01'], ['国庆节', '10-01'],
+      ['春节', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03'],
+      ['清明节', '2027-04-05', '2028-04-04', '2029-04-04', '2030-04-05'],
+      ['端午节', '2027-06-09', '2028-05-28', '2029-06-16', '2030-06-05'],
+      ['中秋节', '2026-09-25', '2027-09-15', '2028-10-03', '2029-09-22', '2030-09-12'],
+    ]
+    const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const parseDay = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
+    const daysUntil = (target, now) => Math.round((dayStart(target) - dayStart(now)) / 86400000)
+    function nextFestivals(now) {
+      const out = []
+      for (const [name, ...dates] of FESTIVALS) {
+        const cands = dates[0].length === 5 ? [now.getFullYear(), now.getFullYear() + 1].map((y) => parseDay(`${y}-${dates[0]}`)) : dates.map(parseDay)
+        const next = cands.find((d) => daysUntil(d, now) >= 0)
+        if (next) out.push({ name, date: next, days: daysUntil(next, now) })
+      }
+      return out.sort((a, b) => a.days - b.days)
+    }
+
+    const pad = (n) => String(n).padStart(2, '0')
+    const hm = (s) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '')); return m ? Number(m[1]) * 60 + Number(m[2]) : null }
+    function dur(sec) {
+      sec = Math.max(0, Math.floor(sec))
+      const h2 = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+      return h2 ? `${h2}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+    }
+
+    /** Where we are in the working day. All times local. */
+    function workState(cfg, now = new Date()) {
+      const isWorkday = cfg.workdays.includes(now.getDay())
+      const sec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+      const start = (hm(cfg.start) ?? 540) * 60, end = (hm(cfg.end) ?? 1080) * 60
+      const ls = cfg.lunch ? (hm(cfg.lunchStart) ?? 720) * 60 : 0, le = cfg.lunch ? (hm(cfg.lunchEnd) ?? 780) * 60 : 0
+      const lunchLen = cfg.lunch ? Math.max(0, le - ls) : 0
+      const total = Math.max(1, end - start - lunchLen)
+      const worked = (t) => Math.max(0, Math.min(t, end) - start - (cfg.lunch ? Math.max(0, Math.min(t, le) - ls) : 0))
+      let phase
+      if (!isWorkday) phase = 'off-day'
+      else if (sec < start) phase = 'before'
+      else if (sec >= end) phase = 'after'
+      else if (cfg.lunch && sec >= ls && sec < le) phase = 'lunch'
+      else phase = 'work'
+      const done = phase === 'after' ? total : phase === 'before' || phase === 'off-day' ? 0 : worked(sec)
+      // next workday's start for the "before / off-day" view
+      let nextStartIn = 0
+      if (phase !== 'work' && phase !== 'lunch') {
+        const d = new Date(now)
+        if (phase === 'after' || phase === 'off-day') d.setDate(d.getDate() + (phase === 'after' ? 1 : 0))
+        for (let i = 0; i < 8 && !cfg.workdays.includes(d.getDay()); i++) d.setDate(d.getDate() + 1)
+        if (phase === 'off-day') { while (!cfg.workdays.includes(d.getDay())) d.setDate(d.getDate() + 1) }
+        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(start / 3600), Math.floor((start % 3600) / 60))
+        nextStartIn = Math.max(0, (t - now) / 1000)
+      }
+      return { phase, toEnd: end - sec, toLunch: cfg.lunch ? ls - sec : -1, toLunchEnd: cfg.lunch ? le - sec : -1, done, total, ratio: done / total, nextStartIn }
+    }
+    function weekendIn(cfg, now) {
+      if (!cfg.workdays.includes(now.getDay())) return 0
+      let n = 0
+      const d = new Date(now)
+      while (cfg.workdays.includes(d.getDay()) && n < 7) { d.setDate(d.getDate() + 1); n++ }
+      return n
+    }
+    function paydayIn(day, now) {
+      const clamp = (y, m) => Math.min(day, new Date(y, m + 1, 0).getDate())
+      let t = new Date(now.getFullYear(), now.getMonth(), clamp(now.getFullYear(), now.getMonth()))
+      if (daysUntil(t, now) < 0) t = new Date(now.getFullYear(), now.getMonth() + 1, clamp(now.getFullYear(), now.getMonth() + 1))
+      return daysUntil(t, now)
+    }
+
+    const REMINDERS = [
+      { id: 'water', label: '喝水', every: 45, text: '起来喝口水吧 💧', code: '✓ Compiled successfully in 1.2s (water)' },
+      { id: 'move', label: '起身活动', every: 60, text: '坐太久了，站起来走两步 🚶', code: 'warn: process has been idle for 60m (stretch)' },
+      { id: 'eye', label: '护眼 20-20-20', every: 20, text: '看看 6 米外的地方 20 秒 👀', code: 'info: GC pause 20s (look away)' },
+      { id: 'fish', label: '摸鱼时间', every: 90, text: '辛苦了，摸会儿鱼吧 🐟', code: 'info: background sync finished (break)' },
+    ]
+
+    return {
+      inject: ['slots'],
+      apply(ctx) {
+        const dock = createDock(ctx, {
+          id: 'moyu', key: 'Y', label: '摸鱼', order: -55, icon: Icon, storageKey: 'dsh-moyu:v1', height: 300,
+          defaults: {
+            view: 'home', start: '09:00', end: '18:00', lunch: true, lunchStart: '12:00', lunchEnd: '13:00', workdays: [1, 2, 3, 4, 5],
+            salary: 0, showMoney: false, payday: 10, countdowns: [], reminders: { water: true, move: true, eye: false, fish: true }, every: {}, sysNotify: false, workOnly: true,
+            disguise: false, fakeFile: 0, badge: 'end',
+          },
+        })
+        const { store, useStore, bus } = dock
+        bus.extras.D = '伪装成代码（假装工作）'
+
+        // ---------------------------------------------------------- disguise mode
+        const applyDisguise = () => {
+          if (typeof document === 'undefined' || !document.body) return
+          const on = store.get().disguise
+          document.body.classList.toggle('yk-disguise', Boolean(on))
+          document.body.style.setProperty('--yk-fake-file', JSON.stringify(FAKE_FILES[store.get().fakeFile % FAKE_FILES.length]))
+        }
+        ctx.effect(() => {
+          let style = null
+          if (typeof document !== 'undefined' && document.head) {
+            style = document.createElement('style')
+            style.setAttribute('data-yk', 'disguise')
+            style.textContent = DISGUISE_CSS
+            document.head.appendChild(style)
+          }
+          applyDisguise()
+          const unsub = store.subscribe(applyDisguise)
+          const onKey = (e) => {
+            if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.repeat || e.code !== 'KeyD') return
+            e.preventDefault()
+            store.set((s) => ({ disguise: !s.disguise, fakeFile: s.disguise ? s.fakeFile : s.fakeFile + 1 }))
+          }
+          window.addEventListener('keydown', onKey, true)
+          return () => {
+            unsub(); window.removeEventListener('keydown', onKey, true)
+            style?.remove()
+            if (typeof document !== 'undefined') document.body?.classList.remove('yk-disguise')
+            delete bus.extras.D
+          }
+        }, 'moyu: disguise')
+
+        // ---------------------------------------------------------- reminders
+        const toast = ykAtom(null)
+        const notify = (r) => {
+          const s = store.get()
+          toast.set({ id: r.id, text: s.disguise ? r.code : r.text, code: s.disguise, at: Date.now() })
+          if (s.sysNotify && typeof Notification !== 'undefined' && Notification.permission === 'granted' && !s.disguise) {
+            try { new Notification('摸鱼助手', { body: r.text, silent: true }) } catch {}
+          }
+        }
+        ctx.effect(() => {
+          const last = {}
+          const t = setInterval(() => {
+            const s = store.get()
+            const now = Date.now()
+            const ws = workState(s)
+            if (s.workOnly && ws.phase !== 'work') { for (const r of REMINDERS) last[r.id] = now; return }
+            for (const r of REMINDERS) {
+              if (!s.reminders[r.id]) { last[r.id] = now; continue }
+              const every = (s.every[r.id] || r.every) * 60000
+              if (!last[r.id]) last[r.id] = now
+              if (now - last[r.id] >= every) { last[r.id] = now; notify(r) }
+            }
+          }, 15000)
+          return () => clearInterval(t)
+        }, 'moyu: reminders')
+
+        function Toast() {
+          const t = toast.use()
+          useEffect(() => { if (!t) return; const x = setTimeout(() => toast.set(null), 12000); return () => clearTimeout(x) }, [t])
+          if (!t) return null
+          const node = h('div', { className: 'my-toast' + (t.code ? ' my-code' : ''), role: 'status' }, h('style', null, CSS), h('span', null, t.text), h('button', { className: 'yk-ibtn', 'aria-label': '关闭提醒', onClick: () => toast.set(null) }, '×'))
+          let RD = null
+          try { RD = require('react-dom') } catch {}
+          return RD?.createPortal && typeof document !== 'undefined' && document.body ? RD.createPortal(node, document.body) : node
+        }
+
+        // the collapsed countdown badge ticks once a second
+        ctx.effect(() => { const t = setInterval(() => { if (!bus.hidden && store.get().collapsed) store.set({ tick: Date.now() }) }, 1000); return () => clearInterval(t) }, 'moyu: badge tick')
+
+        const earnedPerSec = (s) => (s.salary > 0 ? s.salary / 21.75 / Math.max(1, workState(s).total) : 0)
+
+        function Home() {
+          const s = useStore()
+          const [, tick] = useState(0)
+          useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t) }, [])
+          const now = new Date()
+          const ws = workState(s, now)
+          const big = ws.phase === 'work' ? dur(ws.toEnd) : ws.phase === 'lunch' ? dur(ws.toLunchEnd) : ws.phase === 'after' ? '已下班 🎉' : ws.phase === 'before' ? dur(ws.nextStartIn) : '休息日 🛋️'
+          const cap = ws.phase === 'work' ? `距离下班（${s.end}）${ws.toLunch > 0 ? ` · 距午饭 ${dur(ws.toLunch)}` : ''}` : ws.phase === 'lunch' ? '午休中，距离下午上班' : ws.phase === 'before' ? '距离上班' : ws.phase === 'after' ? `明天 ${s.start} 见` : `距下次上班 ${Math.floor(ws.nextStartIn / 86400)} 天 ${dur(ws.nextStartIn % 86400)}`
+          const earned = earnedPerSec(s) * ws.done
+          const fest = nextFestivals(now)
+          const wk = weekendIn(s, now)
+          const tiles = [
+            wk ? { v: wk === 1 ? '明天' : `${wk} 天`, l: '距离周末' } : { v: '就是今天', l: '周末 / 休息日' },
+            { v: (() => { const d = paydayIn(s.payday, now); return d === 0 ? '今天！' : d + ' 天' })(), l: `发薪日（每月 ${s.payday} 号）` },
+            ...fest.slice(0, 2).map((f) => ({ v: f.days === 0 ? '今天' : f.days + ' 天', l: `${f.name} ${f.date.getMonth() + 1}/${f.date.getDate()}` })),
+            ...s.countdowns.map((c) => { const d = daysUntil(parseDay(c.date), now); return { v: d === 0 ? '今天' : d > 0 ? d + ' 天' : `已过 ${-d} 天`, l: c.name } }),
+          ]
+          return h('div', { className: 'yk-scroll', style: { padding: 0 } },
+            h('div', { className: 'my-big' }, big),
+            h('div', { className: 'my-cap' }, cap),
+            (ws.phase === 'work' || ws.phase === 'lunch') && h('div', { className: 'my-bar', title: `今日已完成 ${Math.round(ws.ratio * 100)}%` }, h('i', { style: { width: ws.ratio * 100 + '%' } })),
+            s.salary > 0 && s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, `今日已赚 ¥${earned.toFixed(2)}${ws.phase === 'work' ? ` · 每秒 ¥${earnedPerSec(s).toFixed(4)}` : ''}`),
+            s.salary > 0 && !s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, h('button', { className: 'yk-link', onClick: () => store.set({ showMoney: true }) }, '显示今日已赚')),
+            h('div', { className: 'my-grid' }, tiles.map((t, i) => h('div', { key: i, className: 'my-tile' }, h('b', null, t.v), h('span', null, t.l)))),
+            h('div', { className: 'my-line' },
+              h('label', { className: 'yk-check my-grow', title: `快捷键 ${ykKey('D')}` }, h('input', { type: 'checkbox', checked: s.disguise, onChange: (e) => store.set((st) => ({ disguise: e.target.checked, fakeFile: e.target.checked ? st.fakeFile + 1 : st.fakeFile })) }), `假装工作：所有侧栏小部件伪装成代码（${ykKey('D')}）`)),
+            h('div', { className: 'yk-muted', style: { padding: '0 8px 8px', lineHeight: 1.6 } }, `老板来了按 ${ykKey('H')} 隐藏全部小部件。节假日按节日当天计算，实际放假以国务院通知为准。`))
+        }
+
+        function Settings() {
+          const s = useStore()
+          const [cd, setCd] = useState({ name: '', date: '' })
+          const time = (k) => h('input', { className: 'yk-input', type: 'time', value: s[k], onChange: (e) => store.set({ [k]: e.target.value }) })
+          const DAYS = ['日', '一', '二', '三', '四', '五', '六']
+          return h('div', { className: 'yk-scroll', style: { padding: '2px 0 8px' } },
+            h('div', { className: 'yk-sec' }, '作息'),
+            h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '上班 / 下班'), time('start'), time('end')),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.lunch, onChange: (e) => store.set({ lunch: e.target.checked }) }), '午休'), s.lunch && time('lunchStart'), s.lunch && time('lunchEnd')),
+            h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '工作日'),
+              [1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { key: d, className: 'yk-btn' + (s.workdays.includes(d) ? ' yk-on' : ''), style: { padding: '1px 5px' }, onClick: () => store.set((st) => ({ workdays: st.workdays.includes(d) ? st.workdays.filter((x) => x !== d) : [...st.workdays, d] })) }, DAYS[d]))),
+            h('div', { className: 'yk-sec' }, '工资（只存在本机，用来算“今日已赚”）'),
+            h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '月薪（元）'), h('input', { className: 'yk-input', type: 'number', min: 0, value: s.salary || '', placeholder: '不填则不显示', onChange: (e) => store.set({ salary: Math.max(0, Number(e.target.value) || 0) }) })),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.showMoney, onChange: (e) => store.set({ showMoney: e.target.checked }) }), '显示今日已赚')),
+            h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '每月发薪日'), h('input', { className: 'yk-input', type: 'number', min: 1, max: 31, value: s.payday, onChange: (e) => store.set({ payday: Math.min(31, Math.max(1, Number(e.target.value) || 1)) }) })),
+            h('div', { className: 'yk-sec' }, '自定义倒计时（考试、旅行、纪念日…）'),
+            s.countdowns.map((c, i) => h('div', { key: i, className: 'my-line' }, h('span', { className: 'my-grow' }, `${c.name} · ${c.date}`), h('button', { className: 'yk-ibtn', 'aria-label': '删除倒计时', onClick: () => store.set((st) => ({ countdowns: st.countdowns.filter((_, k) => k !== i) })) }, YkIcons.trash()))),
+            h('div', { className: 'my-line' },
+              h('input', { className: 'yk-input my-grow', style: { width: 'auto' }, placeholder: '名称，如 国考笔试', value: cd.name, onChange: (e) => setCd({ ...cd, name: e.target.value }) }),
+              h('input', { className: 'yk-input', style: { width: 120 }, type: 'date', value: cd.date, onChange: (e) => setCd({ ...cd, date: e.target.value }) }),
+              h('button', { className: 'yk-btn', disabled: !cd.name.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(cd.date), onClick: () => { store.set((st) => ({ countdowns: [...st.countdowns, { name: cd.name.trim(), date: cd.date }] })); setCd({ name: '', date: '' }) } }, '添加')),
+            h('div', { className: 'yk-sec' }, '提醒'),
+            REMINDERS.map((r) => h('div', { key: r.id, className: 'my-line' },
+              h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: Boolean(s.reminders[r.id]), onChange: (e) => store.set((st) => ({ reminders: { ...st.reminders, [r.id]: e.target.checked } })) }), r.label),
+              h('span', { className: 'yk-muted' }, '每'),
+              h('input', { className: 'yk-input', type: 'number', min: 5, max: 240, style: { width: 52 }, value: s.every[r.id] || r.every, onChange: (e) => store.set((st) => ({ every: { ...st.every, [r.id]: Math.min(240, Math.max(5, Number(e.target.value) || r.every)) } })) }),
+              h('span', { className: 'yk-muted' }, '分钟'),
+              h('button', { className: 'yk-link', onClick: () => notify(r) }, '试试'))),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check' }, h('input', { type: 'checkbox', checked: s.workOnly, onChange: (e) => store.set({ workOnly: e.target.checked }) }), '只在上班时间提醒')),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check' }, h('input', {
+              type: 'checkbox', checked: s.sysNotify,
+              onChange: async (e) => {
+                const on = e.target.checked
+                if (on && typeof Notification !== 'undefined' && Notification.permission !== 'granted') { try { if ((await Notification.requestPermission()) !== 'granted') return } catch { return } }
+                store.set({ sysNotify: on })
+              },
+            }), '同时发系统通知（伪装模式下不发）')),
+            h('div', { className: 'yk-sec' }, '收起时小图标显示'),
+            h('div', { className: 'my-line' }, h('select', { className: 'yk-select', value: s.badge, onChange: (e) => store.set({ badge: e.target.value }) },
+              h('option', { value: 'end' }, '下班倒计时'), h('option', { value: 'money' }, '今日已赚'), h('option', { value: 'pct' }, '今日进度 %'), h('option', { value: 'none' }, '不显示'))))
+        }
+
+        function Body() {
+          const s = useStore()
+          return h(React.Fragment, null, h('style', null, CSS), s.view === 'settings' ? h(Settings) : h(Home))
+        }
+
+        dock.mount({
+          Body,
+          title: (s) => (s.view === 'settings' ? '摸鱼 · 设置' : '摸鱼助手'),
+          actions: (s) => [
+            h('button', { key: 'd', className: 'yk-ibtn' + (s.disguise ? ' yk-on' : ''), title: `假装工作（${ykKey('D')}）`, 'aria-label': '假装工作', onClick: () => store.set((st) => ({ disguise: !st.disguise, fakeFile: st.disguise ? st.fakeFile : st.fakeFile + 1 })) }, '</>'),
+            h('button', { key: 'g', className: 'yk-ibtn' + (s.view === 'settings' ? ' yk-on' : ''), title: '设置', 'aria-label': '设置', onClick: () => store.set({ view: s.view === 'settings' ? 'home' : 'settings' }) }, YkIcons.gear()),
+          ],
+          mini: (s) => {
+            if (s.badge === 'none') return null
+            const ws = workState(s)
+            if (ws.phase === 'after') return { text: '下班', className: 'yk-down', tip: '已下班' }
+            if (ws.phase === 'off-day') return { text: '休', tip: '休息日' }
+            if (ws.phase === 'before') return null
+            if (s.badge === 'money' && s.salary > 0) return { text: '¥' + (earnedPerSec(s) * ws.done).toFixed(0), tip: '今日已赚' }
+            if (s.badge === 'pct') return { text: Math.round(ws.ratio * 100) + '%', tip: '今日进度' }
+            const m = Math.ceil(ws.toEnd / 60)
+            return { text: m >= 60 ? `${Math.floor(m / 60)}:${pad(m % 60)}` : `${m}分`, tip: `距离下班 ${dur(ws.toEnd)}` }
+          },
+        })
+        // toast lives outside the dock so it shows even when the card is collapsed or hidden
+        ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({ name: 'sidebar.footer.action', id: 'moyu-toast', order: 100, label: () => '摸鱼提醒' }, Toast))
+      },
+    }
+  },
+})
