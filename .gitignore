@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.log
+# never commit credentials or exported book sources
+auth.json
+.dsh-tieba/
+*bookSource*.json
+*书源*.json
+.env*

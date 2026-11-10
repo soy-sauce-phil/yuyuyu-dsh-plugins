@@ -1,0 +1,42 @@
+{
+  "name": "@soy-sauce-phil/dsh-tieba",
+  "version": "0.1.0",
+  "description": "Browse Baidu Tieba (read-only) in a compact card below the workspace list in the sidebar.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "tieba.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-connection"
+      ]
+    }
+  },
+  "license": "MIT",
+  "author": "soy-sauce-phil",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+    "directory": "dsh-tieba"
+  },
+  "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-tieba#readme"
+}

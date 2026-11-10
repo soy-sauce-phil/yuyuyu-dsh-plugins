@@ -1,0 +1,50 @@
+{
+  "name": "@soy-sauce-phil/dsh-novel-reader",
+  "version": "0.2.0",
+  "description": "Read online novels from Legado-style book sources in the sidebar below the workspace list.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "engine.js",
+    "js-runtime.js",
+    "builtin-sources.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "dependencies": {
+    "cheerio": "1.0.0",
+    "iconv-lite": "0.6.3",
+    "jsonpath-plus": "10.3.0",
+    "quickjs-emscripten": "0.31.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-connection"
+      ]
+    }
+  },
+  "license": "MIT",
+  "author": "soy-sauce-phil",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+    "directory": "dsh-novel-reader"
+  },
+  "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-novel-reader#readme"
+}
