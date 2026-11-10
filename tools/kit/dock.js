@@ -283,15 +283,22 @@ function createDock(ctx, cfg) {
           onClick: () => store.set({ collapsed: false }),
         }, h('style', null, YK_CSS), cfg.icon(), badge?.text ? h('span', { className: badge.className || '' }, badge.text) : null)
       }
+      // in hub mode a card leads back to the launcher grid instead of vanishing
+      const backToHub = () => {
+        const hub = bus.docks.hub
+        if (cfg.id !== 'hub' && hub && hub.expand) { hub.expand(); bus.setOpen('hub') } else store.set({ collapsed: true })
+      }
+      const collapse = () => (hubOn && cfg.id !== 'hub' ? backToHub() : store.set({ collapsed: true }))
       return h('div', { className: 'yk-card yk-card-' + cfg.id },
         h('style', null, YK_CSS),
         h('div', { className: 'yk-grip', title: '拖动调整高度', onPointerDown: onResize }),
         h('div', { className: 'yk-head' },
+          hubOn && cfg.id !== 'hub' && h('button', { key: 'hub-back', className: 'yk-ibtn', title: '返回总入口', 'aria-label': '返回总入口', onClick: backToHub }, YkIcons.back()),
           h('span', { style: { display: 'inline-flex', color: 'var(--dsw-alias-label-secondary)', marginRight: 4 } }, cfg.icon()),
           h('div', { className: 'yk-title', title: t }, t),
           actions ? actions(state) : null,
           h('button', { className: 'yk-ibtn', title: `隐藏所有侧栏小部件（${ykKey('H')}）\n\n${bus.help()}`, 'aria-label': '隐藏', onClick: () => bus.setHidden(true) }, YkIcons.hide()),
-          h('button', { className: 'yk-ibtn', title: cfg.key ? `收起（${ykKey(cfg.key)}）` : '收起', 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, YkIcons.down())),
+          h('button', { className: 'yk-ibtn', title: hubOn && cfg.id !== 'hub' ? '返回总入口' : cfg.key ? `收起（${ykKey(cfg.key)}）` : '收起', 'aria-label': '收起', onClick: collapse }, YkIcons.down())),
         h('div', { className: 'yk-body', style: { height: state.height } }, h(Body)),
         h(YkLightbox))
     }

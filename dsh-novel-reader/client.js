@@ -117,6 +117,7 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------ icons
     const svg = (d, size = 15) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, ...d.map((p, i) => h('path', { key: i, d: p })))
     const Icons = {
+      back: () => svg(['M15 6l-6 6 6 6']),
       book: () => svg(['M4 5.5C7 4.5 10 4.7 12 6v13c-2-1.3-5-1.5-8-.5z', 'M20 5.5c-3-1-6-.8-8 .5v13c2-1.3 5-1.5 8-.5z']),
       shelf: () => svg(['M5 4v16', 'M9 4v16', 'M13.5 5l3.5 14.5', 'M3 20h18']),
       search: () => svg(['M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z', 'M20 20l-4-4']),
@@ -781,6 +782,7 @@ window.__ModuleLoader__.load({
             else if (view === 'sources') body = h(Sources, { t })
             else body = h(Shelf, { t })
           }
+          const backToHub = () => { const hub = bus.docks.hub; if (hub && hub.expand) { hub.expand(); bus.setOpen('hub') } else store.set({ collapsed: true }) }
           const showFont = !state.collapsed && view === 'reader'
           if (state.collapsed) {
             if (openDock && openDock !== DOCK_ID) return null
@@ -794,6 +796,7 @@ window.__ModuleLoader__.load({
             h('style', null, CSS),
             !state.collapsed ? h('div', { className: 'nr-grip', title: t('resize'), onPointerDown: onResize }) : h('div', { style: { height: 4 } }),
             h('div', { className: 'nr-head' },
+              hubMode && h('button', { className: 'nr-ibtn', title: '返回总入口', 'aria-label': '返回总入口', onClick: backToHub }, Icons.back()),
               h('span', { style: { display: 'inline-flex', color: 'var(--dsw-alias-label-secondary)', marginRight: 4 } }, Icons.book()),
               h('div', { className: 'nr-title', title, onClick: () => (book ? setView('reader') : setView('shelf')) }, title),
               showFont && h('button', { className: 'nr-ibtn', title: t('fontSmaller'), 'aria-label': t('fontSmaller'), onClick: () => store.set({ fontSize: Math.max(11, state.fontSize - 1) }) }, Icons.minus()),
@@ -807,8 +810,8 @@ window.__ModuleLoader__.load({
                 onClick: () => bus.setHidden(true),
               }, Icons.hide()),
               h('button', {
-                className: 'nr-ibtn', title: fmt(t('collapseHint'), { k: KEY_TOGGLE }), 'aria-label': t('collapse'),
-                onClick: () => store.set({ collapsed: true }),
+                className: 'nr-ibtn', title: hubMode ? '返回总入口' : fmt(t('collapseHint'), { k: KEY_TOGGLE }), 'aria-label': t('collapse'),
+                onClick: backToHub,
               }, Icons.down())),
             body)
         }

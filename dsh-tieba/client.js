@@ -584,12 +584,14 @@ window.__ModuleLoader__.load({
           else if (entry.view === 'thread') body = h(Thread, { key: 't' + entry.tid, entry })
           else if (entry.view === 'account') body = h(Account)
           else body = h(HomeTabs)
+          const backToHub = () => { const hub = bus.docks.hub; if (hub && hub.expand) { hub.expand(); bus.setOpen('hub') } else store.set({ collapsed: true }) }
           const showFont = entry.view === 'thread'
           const canRefresh = entry.view === 'forum' || entry.view === 'thread' || (entry.view === 'home' && state.homeTab !== 'forums')
           return h('div', { className: 'tb-card' },
             h('style', null, CSS),
             h('div', { className: 'tb-grip', title: '拖动调整高度', onPointerDown: onResize }),
             h('div', { className: 'tb-head' },
+              hubMode && h('button', { className: 'tb-ibtn', title: '返回总入口', 'aria-label': '返回总入口', onClick: backToHub }, Icons.back()),
               state.stack.length > 1
                 ? h('button', { className: 'tb-ibtn', title: '返回', 'aria-label': '返回', onClick: back }, Icons.back())
                 : h('span', { style: { display: 'inline-flex', color: 'var(--dsw-alias-label-secondary)', marginRight: 4 } }, Icons.tieba()),
@@ -600,7 +602,7 @@ window.__ModuleLoader__.load({
               h('button', { className: 'tb-ibtn' + (entry.view === 'home' ? ' tb-on' : ''), title: '首页', 'aria-label': '首页', onClick: goHome }, Icons.home()),
               h('button', { className: 'tb-ibtn' + (entry.view === 'account' ? ' tb-on' : ''), title: '账号', 'aria-label': '账号', onClick: () => (entry.view === 'account' ? back() : push({ view: 'account' })) }, Icons.user()),
               h('button', { className: 'tb-ibtn', title: `隐藏所有侧栏小部件（${KEY_HIDE}）\n\n${bus.help()}`, 'aria-label': '隐藏', onClick: () => bus.setHidden(true) }, Icons.hide()),
-              h('button', { className: 'tb-ibtn', title: `收起（${KEY_TOGGLE}）`, 'aria-label': '收起', onClick: () => store.set({ collapsed: true }) }, Icons.down())),
+              h('button', { className: 'tb-ibtn', title: hubMode ? '返回总入口' : `收起（${KEY_TOGGLE}）`, 'aria-label': '收起', onClick: backToHub }, Icons.down())),
             h('div', { className: 'tb-body', style: { height: state.height } }, body),
             h(Lightbox))
         }
