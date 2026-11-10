@@ -1,0 +1,108 @@
+{
+  "format": 1,
+  "title": {
+    "en": "yuyuyu DSH plugins",
+    "zh": "yuyuyu 的 DSH 插件"
+  },
+  "description": {
+    "en": "Personal sidebar widgets for DeepSeek Harness.",
+    "zh": "个人做的 DeepSeek Harness 侧栏小插件。"
+  },
+  "metadata": {
+    "categories": {
+      "community": {
+        "title": {
+          "en": "Community",
+          "zh": "社区"
+        }
+      },
+      "reading": {
+        "title": {
+          "en": "Reading",
+          "zh": "阅读"
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "@soy-sauce-phil/dsh-tieba",
+      "title": {
+        "en": "Sidebar Tieba",
+        "zh": "侧栏贴吧"
+      },
+      "description": {
+        "en": "Browse Baidu Tieba read-only in a compact card below the workspace list: find forums, read threads and replies; optionally paste BDUSS to list followed forums.",
+        "zh": "在左侧栏工作区下方用小窗口浏览百度贴吧（只读）：搜吧、看帖、楼中楼、只看楼主，可选粘贴 BDUSS 显示关注的吧。"
+      },
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/3918df5d22598010542146d0b72598d220d9a544/dsh-tieba/icon.svg",
+      "author": "soy-sauce-phil",
+      "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-tieba#readme",
+      "repository": {
+        "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+        "directory": "dsh-tieba"
+      },
+      "metadata": {
+        "category": "community",
+        "keywords": [
+          "贴吧",
+          "tieba",
+          "baidu",
+          "sidebar"
+        ]
+      },
+      "versions": [
+        {
+          "version": "0.1.0",
+          "publishTimestamp": 1794278154,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+            "commit": "3918df5d22598010542146d0b72598d220d9a544",
+            "path": "dsh-tieba"
+          }
+        }
+      ]
+    },
+    {
+      "name": "@soy-sauce-phil/dsh-novel-reader",
+      "title": {
+        "en": "Sidebar Novel Reader",
+        "zh": "侧栏小说阅读"
+      },
+      "description": {
+        "en": "Read online novels below the workspace list in the sidebar, using Legado-style book sources (CSS, JSOUP and JSONPath rules) with a bookshelf, table of contents and reading progress.",
+        "zh": "在左侧栏工作区下方阅读网络小说，兼容「阅读 (Legado)」书源的常用规则（CSS / JSOUP / JSONPath），支持书架、目录和阅读进度。"
+      },
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/3918df5d22598010542146d0b72598d220d9a544/dsh-novel-reader/icon.svg",
+      "author": "soy-sauce-phil",
+      "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-novel-reader#readme",
+      "repository": {
+        "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+        "directory": "dsh-novel-reader"
+      },
+      "metadata": {
+        "category": "reading",
+        "keywords": [
+          "小说",
+          "novel",
+          "legado",
+          "阅读",
+          "sidebar"
+        ]
+      },
+      "versions": [
+        {
+          "version": "0.2.0",
+          "publishTimestamp": 1794278154,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+            "commit": "3918df5d22598010542146d0b72598d220d9a544",
+            "path": "dsh-novel-reader"
+          }
+        }
+      ]
+    }
+  ]
+}
