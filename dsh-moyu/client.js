@@ -154,7 +154,7 @@ window.__ModuleLoader__.load({
         b.hubOn = () => Boolean(b.hub && b.docks.hub)
       }
       b.extras = b.extras || {}
-      b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
+      b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.labelOf ? d.labelOf() : d.label}`)
         .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
         .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
       return b
@@ -209,12 +209,13 @@ window.__ModuleLoader__.load({
       const useStore = () => React.useSyncExternalStore(store.subscribe, store.get)
       const bus = ykBus()
       const useBus = (pick) => React.useSyncExternalStore((fn) => { bus.listeners.add(fn); return () => bus.listeners.delete(fn) }, () => pick(bus))
+      const labelOf = () => String((typeof cfg.label === 'function' ? cfg.label(store.get()) : cfg.label) || '')
       let extraKey = null
 
       let miniFn = null
       ctx.effect(() => {
         bus.docks[cfg.id] = {
-          id: cfg.id, key: cfg.key, label: cfg.label, order: cfg.order, icon: cfg.icon,
+          id: cfg.id, key: cfg.key, label: labelOf(), labelOf, order: cfg.order, icon: cfg.icon,
           expand: () => store.set({ collapsed: false }),
           collapse: () => store.set({ collapsed: true }),
           isOpen: () => !store.get().collapsed,
@@ -224,6 +225,7 @@ window.__ModuleLoader__.load({
         const isOpen = () => !store.get().collapsed && !bus.hidden
         const sync = () => { if (isOpen()) bus.setOpen(cfg.id); else if (bus.open === cfg.id) bus.setOpen(null) }
         const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
+        const onRename = () => { const meta = bus.docks[cfg.id]; const name = labelOf(); if (meta && meta.label !== name) { meta.label = name; bus.emit() } }
         const onKey = (e) => {
           if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.isComposing || e.repeat) return
           if (cfg.key && e.code === 'Key' + cfg.key) {
@@ -238,7 +240,7 @@ window.__ModuleLoader__.load({
           }
         }
         bus.listeners.add(onBus)
-        const unsubscribe = store.subscribe(sync)
+        const unsubscribe = store.subscribe(() => { sync(); onRename() })
         window.addEventListener('keydown', onKey, true)
         sync()
         return () => {
@@ -280,13 +282,13 @@ window.__ModuleLoader__.load({
           const hidden = useBus((b) => b.hidden)
           const hubOn = useBus((b) => b.hubOn())
           if (props.wide === false || hidden) return null
-          const t = (title && title(state)) || cfg.label
+          const t = (title && title(state)) || labelOf()
           if (state.collapsed) {
             if (open && open !== cfg.id) return null
             if (cfg.id !== 'hub' && hubOn) return null
             const badge = mini && mini(state)
             return h('button', {
-              className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + cfg.label,
+              className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + t,
               title: `${t}${badge?.tip ? '\n' + badge.tip : ''}\n\n快捷键：\n${bus.help()}`,
               onClick: () => store.set({ collapsed: false }),
             }, h('style', null, YK_CSS), cfg.icon(), badge?.text ? h('span', { className: badge.className || '' }, badge.text) : null)
@@ -317,14 +319,14 @@ window.__ModuleLoader__.load({
           render() {
             if (this.state.error) {
               return h('div', { style: { margin: '0 2px 6px', padding: 8, border: '.5px solid var(--dsw-alias-state-error-primary)', borderRadius: 8, fontSize: 12, color: 'var(--dsw-alias-state-error-primary)', wordBreak: 'break-word', width: '100%', boxSizing: 'border-box' } },
-                `${cfg.label}插件出错：` + (this.state.error?.message || String(this.state.error)),
+                `${labelOf()}插件出错：` + (this.state.error?.message || String(this.state.error)),
                 h('button', { style: { marginLeft: 6 }, onClick: () => { cfg.onReset && cfg.onReset(); this.setState({ error: null }) } }, '重试'))
             }
             return h(Dock, this.props)
           }
         }
         ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-          name: 'sidebar.footer.action', id: cfg.id, order: cfg.order, label: () => cfg.label,
+          name: 'sidebar.footer.action', id: cfg.id, order: cfg.order, label: () => labelOf(),
         }, Boundary))
       }
 
@@ -364,6 +366,8 @@ ${scoped(':is(.yk-title,.tb-title,.nr-title)')}::after{content:var(--yk-fake-fil
 ${scoped(':is(.yk-up,.yk-down,.st-pct,.hot-rank,.kg-right,.kg-wrong,.g2-cell,.ms-cell,.sd-cell)')}{background:transparent!important;color:#9cdcfe!important;border-color:var(--dsw-alias-border-l1)!important}
 body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini){font-family:ui-monospace,Menlo,monospace!important;color:var(--dsw-alias-label-secondary)!important}
 body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini) :is(svg,span){display:none!important}
+body.yk-disguise :is(.yk-hub-name,.yk-hub-key,.yk-hub-badge){display:none!important}
+body.yk-disguise .yk-hub-tile{background:transparent!important;border-color:var(--dsw-alias-border-l1)!important}
 body.yk-disguise :is(.yk-mini,.tb-mini,.nr-mini)::after{content:"{}";font-size:11px}
 body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
 `
@@ -452,15 +456,23 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
     return {
       inject: ['slots'],
       apply(ctx) {
+        let storeRef = null
+        /** The widget's own name: what the user chose, or a neutral one while staying low-key. */
+        const nameOf = () => {
+          const s = storeRef && storeRef.get()
+          const alias = String(s?.alias || '').trim()
+          return alias || (s?.stealth ? '日程' : '摸鱼')
+        }
         const dock = createDock(ctx, {
-          id: 'moyu', key: 'Y', label: '摸鱼', order: -55, icon: Icon, storageKey: 'dsh-moyu:v1', height: 300,
+          id: 'moyu', key: 'Y', label: () => nameOf(), order: -55, icon: Icon, storageKey: 'dsh-moyu:v1', height: 300,
           defaults: {
             view: 'home', start: '09:00', end: '18:00', lunch: true, lunchStart: '12:00', lunchEnd: '13:00', workdays: [1, 2, 3, 4, 5],
             salary: 0, showMoney: false, payday: 10, countdowns: [], reminders: { water: true, move: true, eye: false, fish: true }, every: {}, sysNotify: false, workOnly: true,
-            disguise: false, fakeFile: 0, badge: 'end',
+            disguise: false, fakeFile: 0, badge: 'end', alias: '', stealth: false,
           },
         })
         const { store, useStore, bus } = dock
+        storeRef = store
         bus.extras.D = '伪装成代码（假装工作）'
 
         // ---------------------------------------------------------- disguise mode
@@ -498,7 +510,8 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
         const toast = ykAtom(null)
         const notify = (r) => {
           const s = store.get()
-          toast.set({ id: r.id, text: s.disguise ? r.code : r.text, code: s.disguise, at: Date.now() })
+          const quiet = s.disguise || s.stealth
+          toast.set({ id: r.id, text: quiet ? r.code : r.text, code: quiet, at: Date.now() })
           if (s.sysNotify && typeof Notification !== 'undefined' && Notification.permission === 'granted' && !s.disguise) {
             try { new Notification('摸鱼助手', { body: r.text, silent: true }) } catch {}
           }
@@ -556,8 +569,8 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             h('div', { className: 'my-big' }, big),
             h('div', { className: 'my-cap' }, cap),
             (ws.phase === 'work' || ws.phase === 'lunch') && h('div', { className: 'my-bar', title: `今日已完成 ${Math.round(ws.ratio * 100)}%` }, h('i', { style: { width: ws.ratio * 100 + '%' } })),
-            s.salary > 0 && s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, `今日已赚 ¥${earned.toFixed(2)}${ws.phase === 'work' ? ` · 每秒 ¥${earnedPerSec(s).toFixed(4)}` : ''}`),
-            s.salary > 0 && !s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, h('button', { className: 'yk-link', onClick: () => store.set({ showMoney: true }) }, '显示今日已赚')),
+            !s.stealth && s.salary > 0 && s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, `今日已赚 ¥${earned.toFixed(2)}${ws.phase === 'work' ? ` · 每秒 ¥${earnedPerSec(s).toFixed(4)}` : ''}`),
+            !s.stealth && s.salary > 0 && !s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, h('button', { className: 'yk-link', onClick: () => store.set({ showMoney: true }) }, '显示今日已赚')),
             h('div', { className: 'my-grid' }, tiles.map((t, i) => h('div', { key: i, className: 'my-tile' }, h('b', null, t.v), h('span', null, t.l)))),
             h('div', { className: 'my-line' },
               h('label', { className: 'yk-check my-grow', title: `快捷键 ${ykKey('D')}` }, h('input', { type: 'checkbox', checked: s.disguise, onChange: (e) => store.set((st) => ({ disguise: e.target.checked, fakeFile: e.target.checked ? st.fakeFile + 1 : st.fakeFile })) }), `假装工作：所有侧栏小部件伪装成代码（${ykKey('D')}）`)),
@@ -575,6 +588,11 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.lunch, onChange: (e) => store.set({ lunch: e.target.checked }) }), '午休'), s.lunch && time('lunchStart'), s.lunch && time('lunchEnd')),
             h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '工作日'),
               [1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { key: d, className: 'yk-btn' + (s.workdays.includes(d) ? ' yk-on' : ''), style: { padding: '1px 5px' }, onClick: () => store.set((st) => ({ workdays: st.workdays.includes(d) ? st.workdays.filter((x) => x !== d) : [...st.workdays, d] })) }, DAYS[d]))),
+            h('div', { className: 'yk-sec' }, '名称与低调'),
+            h('div', { className: 'my-line' },
+              h('span', { className: 'my-grow' }, '显示名称'),
+              h('input', { className: 'yk-input', placeholder: nameOf(), value: s.alias, onChange: (e) => store.set({ alias: e.target.value }) })),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.stealth, onChange: (e) => store.set({ stealth: e.target.checked }) }), '低调模式：不显示倒计时数字，提醒也换成普通文字')),
             h('div', { className: 'yk-sec' }, '工资（只存在本机，用来算“今日已赚”）'),
             h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '月薪（元）'), h('input', { className: 'yk-input', type: 'number', min: 0, value: s.salary || '', placeholder: '不填则不显示', onChange: (e) => store.set({ salary: Math.max(0, Number(e.target.value) || 0) }) })),
             h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.showMoney, onChange: (e) => store.set({ showMoney: e.target.checked }) }), '显示今日已赚')),
@@ -613,13 +631,13 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
 
         dock.mount({
           Body,
-          title: (s) => (s.view === 'settings' ? '摸鱼 · 设置' : '摸鱼助手'),
+          title: (s) => (s.view === 'settings' ? nameOf() + ' · 设置' : nameOf()),
           actions: (s) => [
             h('button', { key: 'd', className: 'yk-ibtn' + (s.disguise ? ' yk-on' : ''), title: `假装工作（${ykKey('D')}）`, 'aria-label': '假装工作', onClick: () => store.set((st) => ({ disguise: !st.disguise, fakeFile: st.disguise ? st.fakeFile : st.fakeFile + 1 })) }, '</>'),
             h('button', { key: 'g', className: 'yk-ibtn' + (s.view === 'settings' ? ' yk-on' : ''), title: '设置', 'aria-label': '设置', onClick: () => store.set({ view: s.view === 'settings' ? 'home' : 'settings' }) }, YkIcons.gear()),
           ],
           mini: (s) => {
-            if (s.badge === 'none') return null
+            if (s.badge === 'none' || s.stealth) return null
             const ws = workState(s)
             if (ws.phase === 'after') return { text: '下班', className: 'yk-down', tip: '已下班' }
             if (ws.phase === 'off-day') return { text: '休', tip: '休息日' }

@@ -147,7 +147,7 @@ function ykBus() {
     b.hubOn = () => Boolean(b.hub && b.docks.hub)
   }
   b.extras = b.extras || {}
-  b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.label}`)
+  b.help = () => Object.values(b.docks).filter((d) => d.key).sort((x, y) => (x.order || 0) - (y.order || 0)).map((d) => `${ykKey(d.key)} ${d.labelOf ? d.labelOf() : d.label}`)
     .concat(Object.entries(b.extras).map(([k, label]) => `${ykKey(k)} ${label}`))
     .concat(`${ykKey('H')} 全部隐藏/显示`).join('\n')
   return b
@@ -202,12 +202,13 @@ function createDock(ctx, cfg) {
   const useStore = () => React.useSyncExternalStore(store.subscribe, store.get)
   const bus = ykBus()
   const useBus = (pick) => React.useSyncExternalStore((fn) => { bus.listeners.add(fn); return () => bus.listeners.delete(fn) }, () => pick(bus))
+  const labelOf = () => String((typeof cfg.label === 'function' ? cfg.label(store.get()) : cfg.label) || '')
   let extraKey = null
 
   let miniFn = null
   ctx.effect(() => {
     bus.docks[cfg.id] = {
-      id: cfg.id, key: cfg.key, label: cfg.label, order: cfg.order, icon: cfg.icon,
+      id: cfg.id, key: cfg.key, label: labelOf(), labelOf, order: cfg.order, icon: cfg.icon,
       expand: () => store.set({ collapsed: false }),
       collapse: () => store.set({ collapsed: true }),
       isOpen: () => !store.get().collapsed,
@@ -217,6 +218,7 @@ function createDock(ctx, cfg) {
     const isOpen = () => !store.get().collapsed && !bus.hidden
     const sync = () => { if (isOpen()) bus.setOpen(cfg.id); else if (bus.open === cfg.id) bus.setOpen(null) }
     const onBus = () => { if (bus.open && bus.open !== cfg.id && isOpen()) store.set({ collapsed: true }); else sync() }
+    const onRename = () => { const meta = bus.docks[cfg.id]; const name = labelOf(); if (meta && meta.label !== name) { meta.label = name; bus.emit() } }
     const onKey = (e) => {
       if (!e.altKey || !e.shiftKey || e.metaKey || e.ctrlKey || e.isComposing || e.repeat) return
       if (cfg.key && e.code === 'Key' + cfg.key) {
@@ -231,7 +233,7 @@ function createDock(ctx, cfg) {
       }
     }
     bus.listeners.add(onBus)
-    const unsubscribe = store.subscribe(sync)
+    const unsubscribe = store.subscribe(() => { sync(); onRename() })
     window.addEventListener('keydown', onKey, true)
     sync()
     return () => {
@@ -273,13 +275,13 @@ function createDock(ctx, cfg) {
       const hidden = useBus((b) => b.hidden)
       const hubOn = useBus((b) => b.hubOn())
       if (props.wide === false || hidden) return null
-      const t = (title && title(state)) || cfg.label
+      const t = (title && title(state)) || labelOf()
       if (state.collapsed) {
         if (open && open !== cfg.id) return null
         if (cfg.id !== 'hub' && hubOn) return null
         const badge = mini && mini(state)
         return h('button', {
-          className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + cfg.label,
+          className: 'yk-mini' + (badge?.text ? ' yk-wide' : ''), 'aria-label': '展开' + t,
           title: `${t}${badge?.tip ? '\n' + badge.tip : ''}\n\n快捷键：\n${bus.help()}`,
           onClick: () => store.set({ collapsed: false }),
         }, h('style', null, YK_CSS), cfg.icon(), badge?.text ? h('span', { className: badge.className || '' }, badge.text) : null)
@@ -310,14 +312,14 @@ function createDock(ctx, cfg) {
       render() {
         if (this.state.error) {
           return h('div', { style: { margin: '0 2px 6px', padding: 8, border: '.5px solid var(--dsw-alias-state-error-primary)', borderRadius: 8, fontSize: 12, color: 'var(--dsw-alias-state-error-primary)', wordBreak: 'break-word', width: '100%', boxSizing: 'border-box' } },
-            `${cfg.label}插件出错：` + (this.state.error?.message || String(this.state.error)),
+            `${labelOf()}插件出错：` + (this.state.error?.message || String(this.state.error)),
             h('button', { style: { marginLeft: 6 }, onClick: () => { cfg.onReset && cfg.onReset(); this.setState({ error: null }) } }, '重试'))
         }
         return h(Dock, this.props)
       }
     }
     ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-      name: 'sidebar.footer.action', id: cfg.id, order: cfg.order, label: () => cfg.label,
+      name: 'sidebar.footer.action', id: cfg.id, order: cfg.order, label: () => labelOf(),
     }, Boundary))
   }
 

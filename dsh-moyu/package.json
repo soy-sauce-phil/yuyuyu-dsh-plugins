@@ -1,6 +1,6 @@
 {
   "name": "@soy-sauce-phil/dsh-moyu",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Off-work countdown, earnings ticker, payday / holiday countdowns, health & break reminders, and a disguise mode that makes every sidebar widget look like code.",
   "type": "module",
   "exports": {
