@@ -221,14 +221,23 @@ window.__ModuleLoader__.load({
         const openThread = (tid, title) => push({ view: 'thread', tid: String(tid), title: title || '', pn: 1, lz: false })
 
         /** Load data for `key`; re-runs when key changes. */
-        function useLoad(op, payload, key) {
-          const [st, setSt] = useState({ loading: true, data: null, error: null })
+        /** `cache` (a Map) keeps results by key, so coming back to a view shows it at once without refetching. */
+        function useLoad(op, payload, key, cache) {
+          const [st, setSt] = useState(() => (cache && cache.has(key) ? { loading: false, data: cache.get(key), error: null } : { loading: true, data: null, error: null }))
           const [nonce, setNonce] = useState(0)
+          const first = useRef(true)
           useEffect(() => {
+            const skip = first.current && cache && cache.has(key)
+            first.current = false
+            if (skip) return
             const ac = new AbortController()
             setSt((s) => ({ loading: true, data: s.data, error: null }))
             call(op, payload, ac.signal)
-              .then((data) => { if (!ac.signal.aborted) setSt({ loading: false, data, error: null }) })
+              .then((data) => {
+                if (ac.signal.aborted) return
+                if (cache) { cache.delete(key); cache.set(key, data); while (cache.size > 30) cache.delete(cache.keys().next().value) }
+                setSt({ loading: false, data, error: null })
+              })
               .catch((e) => { if (!ac.signal.aborted) setSt({ loading: false, data: null, error: e?.message || String(e) }) })
             return () => ac.abort()
           }, [key, nonce])
@@ -412,12 +421,23 @@ window.__ModuleLoader__.load({
               ' 粘贴 BDUSS。'))
         }
 
+        const forumCache = new Map()
+        const forumScroll = new Map()
         function Forum({ entry }) {
           const { kw, pn, sort, good } = entry
           const { refreshTick } = useStore()
-          const st = useLoad('forum', { kw, pn, sort, good }, `${kw}|${pn}|${sort}|${good}|${refreshTick || 0}`)
+          const key = `${kw}|${pn}|${sort}|${good}|${refreshTick || 0}`
+          const st = useLoad('forum', { kw, pn, sort, good }, key, forumCache)
           const scrollRef = useRef(null)
-          useEffect(() => { if (scrollRef.current && !st.loading) scrollRef.current.scrollTop = 0 }, [pn, sort, good])
+          // remember where the list was scrolled, so coming back from a thread lands on the same spot
+          const restored = useRef(null)
+          React.useLayoutEffect(() => {
+            const el = scrollRef.current
+            if (!el || !st.data || restored.current === key) return
+            restored.current = key
+            el.scrollTop = forumScroll.get(key) || 0
+          }, [key, st.data])
+          const onScroll = (e) => { if (restored.current === key) forumScroll.set(key, e.currentTarget.scrollTop) }
           const d = st.data
           const total = d?.page.total || 0
           const setPage = (p) => replaceTop({ pn: Math.max(1, p) })
@@ -428,7 +448,7 @@ window.__ModuleLoader__.load({
               h('button', { className: 'tb-btn' + (good ? ' tb-on' : ''), onClick: () => replaceTop({ good: !good, pn: 1 }) }, '精品'),
               h('span', { style: { flex: 1 } }),
               d && h('span', { className: 'tb-muted', title: d.forum.slogan }, `${num(d.forum.members)} 关注`)),
-            h('div', { className: 'tb-scroll', ref: scrollRef },
+            h('div', { className: 'tb-scroll', ref: scrollRef, onScroll },
               st.error && h('div', { className: 'tb-err' }, st.error, ' ', h('button', { className: 'tb-link', onClick: st.reload }, '重试')),
               st.loading && !d && h('div', { className: 'tb-muted', style: { padding: 8 } }, '加载中…'),
               d && !d.threads.length && h('div', { className: 'tb-muted', style: { padding: 8 } }, '这一页没有帖子'),
