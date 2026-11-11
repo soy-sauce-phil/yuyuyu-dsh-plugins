@@ -689,11 +689,12 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             h('div', { className: 'my-line my-clock' },
               h('span', { className: 'yk-muted' }, '上班'), time('in'), h('span', { className: 'yk-muted' }, '下班'), time('out'),
               h('span', { className: 'my-grow' }),
+              !rec.inM && !rec.outM && h('button', { className: 'yk-btn', title: rec.in ? `把上班时间从 ${rec.in} 改成现在` : '记录上班时间', onClick: () => { const t = nowHM(new Date()); setClock(k, { in: t, inM: true, out: rec.out && hm(rec.out) >= hm(t) ? rec.out : t }) } }, '上班打卡'),
               rec.outM
                 ? h('button', { className: 'yk-link', title: '继续自动记录下班时间', onClick: () => setClock(k, { outM: undefined, out: nowHM(new Date()) }) }, '撤销打卡')
                 : h('button', { className: 'yk-btn', disabled: !rec.in, onClick: () => setClock(k, { out: nowHM(new Date()), outM: true }) }, '下班打卡')),
             h('div', { className: 'my-cap', style: { textAlign: 'left', padding: '0 8px' } },
-              rec.in ? [`已工作 ${fmtM(worked)}`, isWorkKey(k, s) ? `计划 ${fmtM(planMin(s))}` : '今天是休息日', over > 0 ? h('span', { key: 'o', className: 'my-over' }, `加班 ${fmtM(over)}`) : over < 0 && rec.outM ? `少 ${fmtM(-over)}` : null].filter(Boolean).flatMap((x, i) => (i ? [' · ', x] : [x])) : '今天还没有记录，在 DSH 里有操作时会自动记上班时间',
+              rec.in ? [`已工作 ${fmtM(worked)}`, isWorkKey(k, s) ? `计划 ${fmtM(planMin(s))}` : '今天是休息日', over > 0 ? h('span', { key: 'o', className: 'my-over' }, `加班 ${fmtM(over)}`) : over < 0 && rec.outM ? `少 ${fmtM(-over)}` : null].filter(Boolean).flatMap((x, i) => (i ? [' · ', x] : [x])) : '今天还没有记录。点「上班打卡」，或在 DSH 里有操作时自动记上班时间',
               ' ', h('button', { className: 'yk-link', onClick: () => store.set({ view: 'hours' }) }, '统计 →')))
         }
 
@@ -753,7 +754,7 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '工作日'),
               [1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { key: d, className: 'yk-btn' + (s.workdays.includes(d) ? ' yk-on' : ''), style: { padding: '1px 5px' }, onClick: () => store.set((st) => ({ workdays: st.workdays.includes(d) ? st.workdays.filter((x) => x !== d) : [...st.workdays, d] })) }, DAYS[d]))),
             h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.track, onChange: (e) => store.set({ track: e.target.checked }) }), '自动记录每天的上下班时间')),
-            h('div', { className: 'yk-muted', style: { padding: '0 8px 4px', lineHeight: 1.6 } }, '当天第一次在 DSH 里操作算上班，最后一次操作算下班（超过 10 分钟没操作就不再往后记）。可以手动「下班打卡」或直接改时间。'),
+            h('div', { className: 'yk-muted', style: { padding: '0 8px 4px', lineHeight: 1.6 } }, '当天第一次在 DSH 里操作算上班，最后一次操作算下班（超过 10 分钟没操作就不再往后记）。也可以手动「上班打卡」「下班打卡」，或直接改时间。'),
             h('div', { className: 'yk-sec' }, '名称与低调'),
             h('div', { className: 'my-line' },
               h('span', { className: 'my-grow' }, '显示名称'),
