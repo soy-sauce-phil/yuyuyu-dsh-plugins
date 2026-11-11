@@ -53,7 +53,7 @@
         "en": "One sidebar entry that collects every widget into a launcher grid.",
         "zh": "把侧栏所有小部件收进一个入口，点一下就打开。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-dockhub/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-dockhub/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-dockhub#readme",
       "repository": {
@@ -73,11 +73,11 @@
       "versions": [
         {
           "version": "0.1.4",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-dockhub"
           }
         },
@@ -133,7 +133,7 @@
         "en": "Browse Baidu Tieba read-only in a compact card below the workspace list: find forums, read threads and replies; optionally paste BDUSS to list followed forums.",
         "zh": "在左侧栏工作区下方用小窗口浏览百度贴吧（只读）：搜吧、看帖、楼中楼、只看楼主，可选粘贴 BDUSS 显示关注的吧。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-tieba/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-tieba/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-tieba#readme",
       "repository": {
@@ -152,11 +152,11 @@
       "versions": [
         {
           "version": "0.1.3",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-tieba"
           }
         },
@@ -202,7 +202,7 @@
         "en": "Read online novels below the workspace list in the sidebar, using Legado-style book sources (CSS, JSOUP and JSONPath rules) with a bookshelf, table of contents and reading progress.",
         "zh": "在左侧栏工作区下方阅读网络小说，兼容「阅读 (Legado)」书源的常用规则（CSS / JSOUP / JSONPath），支持书架、目录和阅读进度。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-novel-reader/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-novel-reader/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-novel-reader#readme",
       "repository": {
@@ -222,11 +222,11 @@
       "versions": [
         {
           "version": "0.2.2",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-novel-reader"
           }
         },
@@ -262,7 +262,7 @@
         "en": "RSS / Atom reader in the sidebar: subscriptions, unread counts, OPML import/export, in-card reading.",
         "zh": "侧栏 RSS / Atom 阅读器：订阅、未读计数、OPML 导入导出、文章内阅读。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-rss/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-rss/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-rss#readme",
       "repository": {
@@ -282,11 +282,11 @@
       "versions": [
         {
           "version": "0.1.5",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-rss"
           }
         },
@@ -352,7 +352,7 @@
         "en": "Trending lists (Zhihu, Baidu, Bilibili, Douyin, Toutiao, Juejin, Hacker News, GitHub) in a compact sidebar card.",
         "zh": "在侧栏小窗口里看知乎、百度、B 站、抖音、头条、掘金、Hacker News、GitHub 等热榜。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-hot/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-hot/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-hot#readme",
       "repository": {
@@ -372,11 +372,11 @@
       "versions": [
         {
           "version": "0.1.5",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-hot"
           }
         },
@@ -442,7 +442,7 @@
         "en": "Watch stocks, indices and funds (A-share, HK, US) in the sidebar, with holdings P&L and a live badge on the collapsed icon.",
         "zh": "侧栏自选股和基金盯盘：A 股、港股、美股、指数、基金估值，可记持仓算盈亏，收起时小图标显示涨跌。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-stock/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-stock/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-stock#readme",
       "repository": {
@@ -462,11 +462,11 @@
       "versions": [
         {
           "version": "0.1.5",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-stock"
           }
         },
@@ -532,7 +532,7 @@
         "en": "Civil-service exam practice in the sidebar: wrong-answer book, favorites, daily goal, custom question banks.",
         "zh": "侧栏考公行测刷题：常识、言语、数量、判断、资料分析，错题本、收藏、每日目标，可导入自己的题库。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-kaogong/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-kaogong/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-kaogong#readme",
       "repository": {
@@ -552,11 +552,11 @@
       "versions": [
         {
           "version": "0.2.0",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-kaogong"
           }
         },
@@ -632,7 +632,7 @@
         "en": "Offline mini games in the sidebar: 2048, Minesweeper, Sudoku, with autosave.",
         "zh": "侧栏小游戏合集：2048、扫雷、数独，完全离线，自动存档。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-games/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-games/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-games#readme",
       "repository": {
@@ -652,11 +652,11 @@
       "versions": [
         {
           "version": "0.1.5",
-          "publishTimestamp": 1794312807,
+          "publishTimestamp": 1794361939,
           "source": {
             "type": "git",
             "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
-            "commit": "55d3d860de73d62ab8112289207e7e9acb4687e7",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
             "path": "dsh-games"
           }
         },
@@ -722,7 +722,7 @@
         "en": "Off-work countdown, earnings ticker, payday / holiday countdowns, health & break reminders, and a disguise mode that makes every sidebar widget look like code.",
         "zh": "下班倒计时、今日已赚、发薪日和假期倒计时、喝水/活动/护眼/摸鱼提醒，以及让所有侧栏小部件看起来像代码的「假装工作」伪装模式。"
       },
-      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/55d3d860de73d62ab8112289207e7e9acb4687e7/dsh-moyu/icon.svg",
+      "icon": "https://raw.githubusercontent.com/soy-sauce-phil/yuyuyu-dsh-plugins/944d1aae438e6079902fbe8098d7daf8fbb8115b/dsh-moyu/icon.svg",
       "author": "soy-sauce-phil",
       "homepage": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins/tree/main/dsh-moyu#readme",
       "repository": {
@@ -740,6 +740,16 @@
         ]
       },
       "versions": [
+        {
+          "version": "0.1.6",
+          "publishTimestamp": 1794361939,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/soy-sauce-phil/yuyuyu-dsh-plugins",
+            "commit": "944d1aae438e6079902fbe8098d7daf8fbb8115b",
+            "path": "dsh-moyu"
+          }
+        },
         {
           "version": "0.1.5",
           "publishTimestamp": 1794312807,
