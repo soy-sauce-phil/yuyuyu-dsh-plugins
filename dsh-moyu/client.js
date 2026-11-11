@@ -350,6 +350,15 @@ window.__ModuleLoader__.load({
 .my-toast{position:fixed;right:18px;bottom:18px;z-index:2147483000;max-width:300px;padding:10px 12px;border-radius:10px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:13px;line-height:1.5;display:flex;gap:8px;align-items:flex-start}
 .my-toast.my-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 .my-toast button{margin-left:auto}
+.my-clock{flex-wrap:wrap}
+.my-clock .yk-input{width:78px}
+.my-hrow{display:flex;align-items:center;gap:4px;padding:2px 8px;font-size:12px;font-variant-numeric:tabular-nums}
+.my-hrow .yk-input{width:74px;padding:1px 4px}
+.my-hrow .my-d{width:62px;flex:none}
+.my-hrow .my-w{width:40px;flex:none;text-align:right}
+.my-hrow .my-o{width:46px;flex:none;text-align:right;color:var(--dsw-alias-label-secondary)}
+.my-hrow.my-off .my-d{color:var(--dsw-alias-label-secondary)}
+.my-over{color:#d9822b}
 `
     // Disguise: every sidebar widget (these plugins, the novel reader and Tieba) renders as source code.
     const CARDS = '.yk-card,.tb-card,.nr-card'
@@ -446,6 +455,50 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
       return daysUntil(t, now)
     }
 
+    // ---- work hours. A "work day" runs 04:00 → 04:00, so staying past midnight still counts for that day.
+    const BOUNDARY = 4 * 60
+    const dayKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const workDayOf = (now) => dayKey(new Date(now.getTime() - BOUNDARY * 60000))
+    const nowHM = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    function spanOf(rec) {
+      const a = hm(rec?.in), b0 = hm(rec?.out)
+      if (a == null || b0 == null) return null
+      return [a, b0 < a ? b0 + 1440 : b0]
+    }
+    /** Minutes worked: clock-in to clock-out minus the lunch break it covers. */
+    function workedMin(rec, cfg) {
+      const sp = spanOf(rec)
+      if (!sp) return 0
+      let m = sp[1] - sp[0]
+      if (cfg.lunch) { const ls = hm(cfg.lunchStart) ?? 720, le = hm(cfg.lunchEnd) ?? 780; m -= Math.max(0, Math.min(sp[1], le) - Math.max(sp[0], ls)) }
+      return Math.max(0, m)
+    }
+    const planMin = (cfg) => Math.round(workState(cfg).total / 60)
+    const isWorkKey = (k, cfg) => cfg.workdays.includes(parseDay(k).getDay())
+    /** Worked minus planned; on a day off every minute is overtime. */
+    const overMin = (k, rec, cfg) => workedMin(rec, cfg) - (isWorkKey(k, cfg) ? planMin(cfg) : 0)
+    const fmtM = (m) => `${m < 0 ? '-' : ''}${Math.floor(Math.abs(m) / 60)}:${pad(Math.abs(m) % 60)}`
+    const fmtOver = (m) => (m > 0 ? '+' + fmtM(m) : m < 0 ? fmtM(m) : '±0')
+    /** Totals over the given day keys. */
+    function sumUp(keys, clock, cfg) {
+      const recs = keys.filter((k) => spanOf(clock[k]))
+      // today only counts towards overtime / average once it's over (clocked out, or past the planned end)
+      const today = workDayOf(new Date())
+      const finished = (k) => k !== today || clock[k].outM || workState(cfg).phase === 'after' || !isWorkKey(k, cfg)
+      const done = recs.filter(finished)
+      const worked = recs.reduce((n, k) => n + workedMin(clock[k], cfg), 0)
+      const over = done.reduce((n, k) => n + overMin(k, clock[k], cfg), 0)
+      const doneWorked = done.reduce((n, k) => n + workedMin(clock[k], cfg), 0)
+      return { days: recs.length, worked, over, avg: done.length ? Math.round(doneWorked / done.length) : 0 }
+    }
+    function keysBack(fromKey, n) {
+      const d = parseDay(fromKey)
+      const out = []
+      for (let i = 0; i < n; i++) { out.push(dayKey(d)); d.setDate(d.getDate() - 1) }
+      return out
+    }
+
     const REMINDERS = [
       { id: 'water', label: '喝水', every: 45, text: '起来喝口水吧 💧', code: '✓ Compiled successfully in 1.2s (water)' },
       { id: 'move', label: '起身活动', every: 60, text: '坐太久了，站起来走两步 🚶', code: 'warn: process has been idle for 60m (stretch)' },
@@ -469,6 +522,7 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             view: 'home', start: '09:00', end: '18:00', lunch: true, lunchStart: '12:00', lunchEnd: '13:00', workdays: [1, 2, 3, 4, 5],
             salary: 0, showMoney: false, payday: 10, countdowns: [], reminders: { water: true, move: true, eye: false, fish: true }, every: {}, sysNotify: false, workOnly: true,
             disguise: false, fakeFile: 0, badge: 'end', alias: '', stealth: false,
+            track: true, clock: {},
           },
         })
         const { store, useStore, bus } = dock
@@ -505,6 +559,49 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             delete bus.extras.D
           }
         }, 'moyu: disguise')
+
+        // ---------------------------------------------------------- work hours
+        // Clock-in = first activity of the day in DSH, clock-out = last activity (until clocked out by hand).
+        // "Activity" means input in this page within the last 10 minutes, so a page left open overnight doesn't count.
+        let lastActive = Date.now()
+        const ACTIVE_MS = 10 * 60000
+        const isActive = () => Date.now() - lastActive < ACTIVE_MS
+        function setClock(k, patch) {
+          store.set((st) => {
+            const clock = { ...st.clock }
+            const rec = { ...(clock[k] || {}), ...patch }
+            for (const f of Object.keys(rec)) if (rec[f] === undefined || rec[f] === '') delete rec[f]
+            if (!rec.in && !rec.out) delete clock[k]
+            else clock[k] = rec
+            const keys = Object.keys(clock).sort()
+            for (const old of keys.slice(0, Math.max(0, keys.length - 400))) delete clock[old]
+            return { clock }
+          })
+        }
+        function beat() {
+          const s = store.get()
+          if (!s.track || !isActive()) return
+          const now = new Date()
+          const k = workDayOf(now), t = nowHM(now), rec = s.clock[k] || {}
+          const patch = {}
+          if (!rec.in) patch.in = t
+          if (!rec.outM && rec.out !== t) patch.out = t
+          if (Object.keys(patch).length) setClock(k, patch)
+        }
+        ctx.effect(() => {
+          const mark = () => { lastActive = Date.now() }
+          const EVS = ['pointerdown', 'keydown', 'wheel', 'mousemove']
+          for (const e of EVS) window.addEventListener(e, mark, true)
+          beat()
+          const t = setInterval(beat, 60000)
+          return () => { for (const e of EVS) window.removeEventListener(e, mark, true); clearInterval(t) }
+        }, 'moyu: work hours')
+        /** Still at work past the planned end (auto-tracked, not clocked out, recently active)? */
+        const stayingLate = (s, now = new Date()) => {
+          if (!s.track) return false
+          const rec = s.clock[workDayOf(now)]
+          return Boolean(rec && rec.in && !rec.outM && isActive())
+        }
 
         // ---------------------------------------------------------- reminders
         const toast = ykAtom(null)
@@ -554,8 +651,9 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
           useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t) }, [])
           const now = new Date()
           const ws = workState(s, now)
-          const big = ws.phase === 'work' ? dur(ws.toEnd) : ws.phase === 'lunch' ? dur(ws.toLunchEnd) : ws.phase === 'after' ? '已下班 🎉' : ws.phase === 'before' ? dur(ws.nextStartIn) : '休息日 🛋️'
-          const cap = ws.phase === 'work' ? `距离下班（${s.end}）${ws.toLunch > 0 ? ` · 距午饭 ${dur(ws.toLunch)}` : ''}` : ws.phase === 'lunch' ? '午休中，距离下午上班' : ws.phase === 'before' ? '距离上班' : ws.phase === 'after' ? `明天 ${s.start} 见` : `距下次上班 ${Math.floor(ws.nextStartIn / 86400)} 天 ${dur(ws.nextStartIn % 86400)}`
+          const late = ws.phase === 'after' && stayingLate(s, now)
+          const big = ws.phase === 'work' ? dur(ws.toEnd) : ws.phase === 'lunch' ? dur(ws.toLunchEnd) : late ? dur(-ws.toEnd) : ws.phase === 'after' ? '已下班 🎉' : ws.phase === 'before' ? dur(ws.nextStartIn) : '休息日 🛋️'
+          const cap = ws.phase === 'work' ? `距离下班（${s.end}）${ws.toLunch > 0 ? ` · 距午饭 ${dur(ws.toLunch)}` : ''}` : ws.phase === 'lunch' ? '午休中，距离下午上班' : late ? `已经过了下班时间（${s.end}），走的时候点「下班打卡」` : ws.phase === 'before' ? '距离上班' : ws.phase === 'after' ? `明天 ${s.start} 见` : `距下次上班 ${Math.floor(ws.nextStartIn / 86400)} 天 ${dur(ws.nextStartIn % 86400)}`
           const earned = earnedPerSec(s) * ws.done
           const fest = nextFestivals(now)
           const wk = weekendIn(s, now)
@@ -571,10 +669,76 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             (ws.phase === 'work' || ws.phase === 'lunch') && h('div', { className: 'my-bar', title: `今日已完成 ${Math.round(ws.ratio * 100)}%` }, h('i', { style: { width: ws.ratio * 100 + '%' } })),
             !s.stealth && s.salary > 0 && s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, `今日已赚 ¥${earned.toFixed(2)}${ws.phase === 'work' ? ` · 每秒 ¥${earnedPerSec(s).toFixed(4)}` : ''}`),
             !s.stealth && s.salary > 0 && !s.showMoney && h('div', { className: 'my-cap', style: { marginTop: 4 } }, h('button', { className: 'yk-link', onClick: () => store.set({ showMoney: true }) }, '显示今日已赚')),
+            h(Today, { now }),
             h('div', { className: 'my-grid' }, tiles.map((t, i) => h('div', { key: i, className: 'my-tile' }, h('b', null, t.v), h('span', null, t.l)))),
             h('div', { className: 'my-line' },
               h('label', { className: 'yk-check my-grow', title: `快捷键 ${ykKey('D')}` }, h('input', { type: 'checkbox', checked: s.disguise, onChange: (e) => store.set((st) => ({ disguise: e.target.checked, fakeFile: e.target.checked ? st.fakeFile + 1 : st.fakeFile })) }), `假装工作：所有侧栏小部件伪装成代码（${ykKey('D')}）`)),
             h('div', { className: 'yk-muted', style: { padding: '0 8px 8px', lineHeight: 1.6 } }, `老板来了按 ${ykKey('H')} 隐藏全部小部件。节假日按节日当天计算，实际放假以国务院通知为准。`))
+        }
+
+        function Today({ now }) {
+          const s = useStore()
+          if (!s.track) return null
+          const k = workDayOf(now)
+          const rec = s.clock[k] || {}
+          const worked = workedMin(rec, s)
+          const over = overMin(k, rec, s)
+          const time = (f) => h('input', { className: 'yk-input', type: 'time', value: rec[f] || '', 'aria-label': f === 'in' ? '上班时间' : '下班时间', onChange: (e) => setClock(k, { [f]: e.target.value, [f + 'M']: e.target.value ? true : undefined }) })
+          return h(React.Fragment, null,
+            h('div', { className: 'yk-sec' }, '今日工时'),
+            h('div', { className: 'my-line my-clock' },
+              h('span', { className: 'yk-muted' }, '上班'), time('in'), h('span', { className: 'yk-muted' }, '下班'), time('out'),
+              h('span', { className: 'my-grow' }),
+              rec.outM
+                ? h('button', { className: 'yk-link', title: '继续自动记录下班时间', onClick: () => setClock(k, { outM: undefined, out: nowHM(new Date()) }) }, '撤销打卡')
+                : h('button', { className: 'yk-btn', disabled: !rec.in, onClick: () => setClock(k, { out: nowHM(new Date()), outM: true }) }, '下班打卡')),
+            h('div', { className: 'my-cap', style: { textAlign: 'left', padding: '0 8px' } },
+              rec.in ? [`已工作 ${fmtM(worked)}`, isWorkKey(k, s) ? `计划 ${fmtM(planMin(s))}` : '今天是休息日', over > 0 ? h('span', { key: 'o', className: 'my-over' }, `加班 ${fmtM(over)}`) : over < 0 && rec.outM ? `少 ${fmtM(-over)}` : null].filter(Boolean).flatMap((x, i) => (i ? [' · ', x] : [x])) : '今天还没有记录，在 DSH 里有操作时会自动记上班时间',
+              ' ', h('button', { className: 'yk-link', onClick: () => store.set({ view: 'hours' }) }, '统计 →')))
+        }
+
+        function Hours() {
+          const s = useStore()
+          const today = workDayOf(new Date())
+          const [n, setN] = useState(14)
+          const d0 = parseDay(today)
+          const weekKeys = keysBack(today, ((d0.getDay() + 6) % 7) + 1) // Monday → today
+          const monthKeys = keysBack(today, d0.getDate())
+          const prevMonthEnd = new Date(d0.getFullYear(), d0.getMonth(), 0)
+          const prevKeys = keysBack(dayKey(prevMonthEnd), prevMonthEnd.getDate())
+          const blocks = [['本周', sumUp(weekKeys, s.clock, s)], ['本月', sumUp(monthKeys, s.clock, s)], [`${prevMonthEnd.getMonth() + 1} 月`, sumUp(prevKeys, s.clock, s)]]
+          const rows = keysBack(today, n).filter((k) => s.clock[k] || isWorkKey(k, s))
+          const exportCsv = () => {
+            const keys = Object.keys(s.clock).sort()
+            const csv = '\ufeff日期,星期,上班,下班,工时(分钟),加班(分钟)\n' + keys.map((k) => { const r = s.clock[k]; return [k, WEEK[parseDay(k).getDay()], r.in || '', r.out || '', spanOf(r) ? workedMin(r, s) : '', spanOf(r) ? overMin(k, r, s) : ''].join(',') }).join('\n')
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `工时-${today}.csv`
+            document.body.appendChild(a); a.click(); a.remove()
+          }
+          return h('div', { className: 'yk-scroll', style: { padding: '2px 0 8px' } },
+            h('div', { className: 'my-grid', style: { gridTemplateColumns: '1fr 1fr 1fr' } }, blocks.map(([label, x]) => h('div', { key: label, className: 'my-tile' },
+              h('b', null, fmtM(x.worked)), h('span', null, `${label} · ${x.days} 天`), h('div', { className: 'yk-muted', style: { fontSize: 11 } }, `日均 ${fmtM(x.avg)}`),
+              h('div', { className: x.over > 0 ? 'my-over' : 'yk-muted', style: { fontSize: 11 } }, `加班 ${fmtOver(x.over)}`)))),
+            h('div', { className: 'yk-sec' }, '每日记录（可以直接改时间）'),
+            rows.map((k) => {
+              const r = s.clock[k] || {}
+              const off = !isWorkKey(k, s)
+              const d = parseDay(k)
+              const has = spanOf(r)
+              const o = has ? overMin(k, r, s) : 0
+              const time = (f) => h('input', { className: 'yk-input', type: 'time', value: r[f] || '', 'aria-label': `${k} ${f === 'in' ? '上班' : '下班'}`, onChange: (e) => setClock(k, { [f]: e.target.value, [f + 'M']: e.target.value ? true : undefined }) })
+              return h('div', { key: k, className: 'my-hrow' + (off ? ' my-off' : '') },
+                h('span', { className: 'my-d' }, `${d.getMonth() + 1}/${d.getDate()} ${WEEK[d.getDay()]}`), time('in'), time('out'),
+                h('span', { className: 'my-w' }, has ? fmtM(workedMin(r, s)) : off ? '休' : '—'),
+                h('span', { className: 'my-o' + (o > 0 ? ' my-over' : '') }, has ? fmtOver(o) : ''),
+                (r.in || r.out) && h('button', { className: 'yk-ibtn', 'aria-label': `删除 ${k} 的记录`, title: '删除这天的记录', onClick: () => setClock(k, { in: undefined, out: undefined, inM: undefined, outM: undefined }) }, YkIcons.trash()))
+            }),
+            h('div', { className: 'my-line' },
+              n < 400 && h('button', { className: 'yk-link', onClick: () => setN(n < 31 ? 62 : n * 2) }, '看更早的'),
+              h('span', { className: 'my-grow' }),
+              h('button', { className: 'yk-btn', disabled: !Object.keys(s.clock).length, onClick: exportCsv }, '导出 CSV')),
+            h('div', { className: 'yk-muted', style: { padding: '2px 8px', lineHeight: 1.6 } },
+              `工时 = 下班 − 上班 − 午休（${s.lunch ? `${s.lunchStart}–${s.lunchEnd}` : '未设'}），计划每天 ${fmtM(planMin(s))}；休息日的工时全部算加班。凌晨 4 点前离开算前一天。记录只存在本机浏览器。`))
         }
 
         function Settings() {
@@ -588,6 +752,8 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
             h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.lunch, onChange: (e) => store.set({ lunch: e.target.checked }) }), '午休'), s.lunch && time('lunchStart'), s.lunch && time('lunchEnd')),
             h('div', { className: 'my-line' }, h('span', { className: 'my-grow' }, '工作日'),
               [1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { key: d, className: 'yk-btn' + (s.workdays.includes(d) ? ' yk-on' : ''), style: { padding: '1px 5px' }, onClick: () => store.set((st) => ({ workdays: st.workdays.includes(d) ? st.workdays.filter((x) => x !== d) : [...st.workdays, d] })) }, DAYS[d]))),
+            h('div', { className: 'my-line' }, h('label', { className: 'yk-check my-grow' }, h('input', { type: 'checkbox', checked: s.track, onChange: (e) => store.set({ track: e.target.checked }) }), '自动记录每天的上下班时间')),
+            h('div', { className: 'yk-muted', style: { padding: '0 8px 4px', lineHeight: 1.6 } }, '当天第一次在 DSH 里操作算上班，最后一次操作算下班（超过 10 分钟没操作就不再往后记）。可以手动「下班打卡」或直接改时间。'),
             h('div', { className: 'yk-sec' }, '名称与低调'),
             h('div', { className: 'my-line' },
               h('span', { className: 'my-grow' }, '显示名称'),
@@ -626,19 +792,22 @@ body.yk-disguise .yk-mini.yk-wide::after{content:"{ }"}
 
         function Body() {
           const s = useStore()
-          return h(React.Fragment, null, h('style', null, CSS), s.view === 'settings' ? h(Settings) : h(Home))
+          return h(React.Fragment, null, h('style', null, CSS), s.view === 'settings' ? h(Settings) : s.view === 'hours' ? h(Hours) : h(Home))
         }
 
         dock.mount({
           Body,
-          title: (s) => (s.view === 'settings' ? nameOf() + ' · 设置' : nameOf()),
+          title: (s) => (s.view === 'settings' ? nameOf() + ' · 设置' : s.view === 'hours' ? nameOf() + ' · 工时' : nameOf()),
           actions: (s) => [
+            s.view === 'hours' && h('button', { key: 'b', className: 'yk-ibtn', title: '返回', 'aria-label': '返回', onClick: () => store.set({ view: 'home' }) }, YkIcons.back()),
+            s.track && h('button', { key: 'h', className: 'yk-ibtn' + (s.view === 'hours' ? ' yk-on' : ''), title: '工时统计', 'aria-label': '工时统计', onClick: () => store.set({ view: s.view === 'hours' ? 'home' : 'hours' }) }, YkIcons.svg(['M5 20V11', 'M12 20V5', 'M19 20v-6'])),
             h('button', { key: 'd', className: 'yk-ibtn' + (s.disguise ? ' yk-on' : ''), title: `假装工作（${ykKey('D')}）`, 'aria-label': '假装工作', onClick: () => store.set((st) => ({ disguise: !st.disguise, fakeFile: st.disguise ? st.fakeFile : st.fakeFile + 1 })) }, '</>'),
             h('button', { key: 'g', className: 'yk-ibtn' + (s.view === 'settings' ? ' yk-on' : ''), title: '设置', 'aria-label': '设置', onClick: () => store.set({ view: s.view === 'settings' ? 'home' : 'settings' }) }, YkIcons.gear()),
           ],
           mini: (s) => {
             if (s.badge === 'none' || s.stealth) return null
             const ws = workState(s)
+            if (ws.phase === 'after' && stayingLate(s)) { const m = Math.floor(-ws.toEnd / 60); return { text: `+${Math.floor(m / 60)}:${pad(m % 60)}`, tip: `已过下班时间 ${dur(-ws.toEnd)}` } }
             if (ws.phase === 'after') return { text: '下班', className: 'yk-down', tip: '已下班' }
             if (ws.phase === 'off-day') return { text: '休', tip: '休息日' }
             if (ws.phase === 'before') return null
